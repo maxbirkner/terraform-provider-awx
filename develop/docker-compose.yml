@@ -1,0 +1,23 @@
+---
+version: "3.4"
+
+# https://docs.docker.com/compose/compose-file/compose-file-v3/#version-3-4
+services:
+
+  # https://docs.docker.com/compose/compose-file/compose-file-v3/#container_name
+  develop:
+    image: "jsilvas/terraform-provider-awx-develop:latest"
+    build:
+      context: "../"
+      dockerfile: "develop/Dockerfile"
+      args:
+        ALPINE_VERSION: "${ALPINE_VERSION}"
+        GO_VERSION: "${GO_VERSION}"
+        GORELEASER_VERSION: "${GORELEASER_VERSION}"
+        GOLANGCILINT_VERSION: "${GOLANGCILINT_VERSION}"
+        TERRAFORM_VERSION: "${TERRAFORM_VERSION}"
+    env_file:
+      - ".env"
+    volumes:
+      - "../:/workdir"
+    tty: true

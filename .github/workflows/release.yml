@@ -1,75 +1,42 @@
-# This uses an action (crazy-max/ghaction-import-gpg) that assumes you set your
-# private key in the `GPG_PRIVATE_KEY` secret and passphrase in the `PASSPHRASE`
-# secret. If you would rather own your own GPG handling, please fork this action
-# or use an alternative one for key handling.
-#
-# You will need to pass the `--batch` flag to `gpg` in your signing step
-# in `goreleaser` to indicate this is being used in a non-interactive mode.
-#
-name: Release
+name: "Terraform Provider Release"
 
+# This GitHub action creates a release when a tag that matches the pattern
+# "v*" (e.g. v0.1.0) is created.
 on:
-  workflow_dispatch:
   push:
-    branches:
-      - 'main'
-    tags-ignore:
-      - '**'
+    tags:
+      - 'v*'
+
+# Releases need permissions to read and write the repository contents.
+# GitHub considers creating releases and uploading assets as writing contents.
+permissions:
+  contents: "write"
 
 jobs:
-
-  release:
-
-    runs-on: ubuntu-latest
+  goreleaser:
+    runs-on: "ubuntu-latest"
     steps:
-
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: "actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9" # v3.5.3
         with:
-          fetch-depth: 0 # otherwise, you will failed to push refs to dest repo
-          persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
-
-      - name: Release
-        id: release
-        uses: cycjimmy/semantic-release-action@5982a02995853159735cb838992248c4f0f16166 # v2
+          # Allow goreleaser to access older tag information.
+          fetch-depth: 0
+      - uses: "actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe" # v4.1.0
         with:
-          semantic_version: 17.4.7
-          branches: |
-            [
-              'main'
-            ]
-          extra_plugins: |
-            @semantic-release/commit-analyzer@8.0.1
-            @semantic-release/release-notes-generator@9.0.3
-            @semantic-release/changelog@5.0.1
-            @semantic-release/git@9.0.1
-            @semantic-release/github@7.2.3
-        env:
-          GIT_CREDENTIALS: git:${{ secrets.PAT }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          go-version-file: "go.mod"
+          cache: true
 
-      - name: Set up Go
-        if: steps.release.outputs.new_release_published == 'true'
-        uses: actions/setup-go@v4
+      - name: "Import GPG key"
+        uses: "crazy-max/ghaction-import-gpg@72b6676b71ab476b77e676928516f6982eef7a41" # v5.3.0
+        id: "import_gpg"
         with:
-          go-version: '1.20'
-
-      - name: Import GPG key
-        if: steps.release.outputs.new_release_published == 'true'
-        id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v4
-        with:
-          # These secrets will need to be configured for the repository:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
 
-      - name: Run GoReleaser
-        if: steps.release.outputs.new_release_published == 'true'
-        uses: goreleaser/goreleaser-action@v2.8.0
+      - name: "Run GoReleaser"
+        uses: "goreleaser/goreleaser-action@3fa32b8bb5620a2c1afe798654bbad59f9da4906" # v4.4.0
         with:
-          version: latest
-          args: release --rm-dist
+          args: "release --clean"
         env:
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
-          # GitHub sets this automatically
+          # GitHub sets the GITHUB_TOKEN secret automatically.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}

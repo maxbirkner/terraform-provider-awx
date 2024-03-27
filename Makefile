@@ -1,37 +1,121 @@
-TEST?=$$(go list ./... | grep -v 'vendor')
-HOSTNAME=github.com
-NAMESPACE=denouche
-NAME=awx
-BINARY=terraform-provider-${NAME}
-VERSION=0.1
-OS_ARCH=linux_amd64 #darwin_amd64
+# -------------------------------------------------------------------------------------------
+# VARIABLES: Variable declarations to be used within make to generate commands.
+# -------------------------------------------------------------------------------------------
+VERSION      := $(shell cat VERSION)
+HOSTNAME      = github.com
+NAMESPACE     = josh-silvas
+NAME          = awx
+PROJECT_NAME  = terraform-provider-${NAME}
+COMPOSE      := docker-compose --project-name $(PROJECT_NAME) --project-directory "develop" -f "develop/docker-compose.yml"
+OS_ARCH       = linux_amd64 #darwin_amd64
+TEST         ?= $$(go list ./... | grep -v 'vendor')
 
-default: install
+default: help
 
-build:
-	go build -o ${BINARY}
+# -------------------------------------------------------------------------------------------
+# RELEASE: Release management directives.
+# -------------------------------------------------------------------------------------------
+release: ## Run goreleaser to create a release
+	@rm -rf dist/*
+	@git tag -d $(VERSION) || true
+	@git tag $(VERSION)
+	@goreleaser --rm-dist --skip-validate --skip-announce
+.PHONY: release
 
-release:
-	GOOS=darwin GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_darwin_amd64
-	GOOS=freebsd GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_freebsd_386
-	GOOS=freebsd GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_freebsd_amd64
-	GOOS=freebsd GOARCH=arm go build -o ./bin/${BINARY}_${VERSION}_freebsd_arm
-	GOOS=linux GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_linux_386
-	GOOS=linux GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_linux_amd64
-	GOOS=linux GOARCH=arm go build -o ./bin/${BINARY}_${VERSION}_linux_arm
-	GOOS=openbsd GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_openbsd_386
-	GOOS=openbsd GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_openbsd_amd64
-	GOOS=solaris GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_solaris_amd64
-	GOOS=windows GOARCH=386 go build -o ./bin/${BINARY}_${VERSION}_windows_386
-	GOOS=windows GOARCH=amd64 go build -o ./bin/${BINARY}_${VERSION}_windows_amd64
+tag: ## Tag and push the version defined in VERSION file
+	@git tag -d $(VERSION) || true
+	@git tag $(VERSION)
+	@git push origin $(VERSION)
+.PHONY: tag
 
-install: build
-	mkdir -p ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
-	mv ${BINARY} ~/.terraform.d/plugins/${HOSTNAME}/${NAMESPACE}/${NAME}/${VERSION}/${OS_ARCH}
 
-test:
-	go test -i $(TEST) || exit 1
-	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
+# -------------------------------------------------------------------------------------------
+# CODE-QUALITY/TESTS: Linting and testing directives.
+# -------------------------------------------------------------------------------------------
+_lint: ## Run golangci-lint on all sub-packages
+	@echo "🧪 Running golangci-lint..."
+	@golangci-lint run --tests=false --exclude-use-default=false
+	@echo "Completed golangci-lint."
+.PHONY: _lint
 
-testacc:
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m
+_testacc: ## Run acceptance tests
+	@echo "🛠 Running acceptance tests..."
+	@TF_ACC=1 go test ./... -v $(TESTARGS) -timeout 120m  | { grep -v 'no test files'; true; }
+	@echo "Completed acceptance tests."
+.PHONY: _testacc
+
+# -------------------------------------------------------------------------------------------
+# DEVELOPMENT: Development tools for use when contributing to this project.
+# -------------------------------------------------------------------------------------------
+develop: .env ## Build the development docker image and push to registry
+	@echo "🐳 Building development docker image and pushing to registry..."
+	@$(COMPOSE) build --no-cache
+	@docker push jsilvas/${PROJECT_NAME}-develop:latest
+.PHONY: develop
+
+cli: .env ## Launch a bash shell inside the running container.
+	@echo "🐳 Launching a bash shell 💻 inside the running container..."
+	@$(COMPOSE) run --rm develop bash
+.PHONY: cli
+
+destroy: .env ## Destroy the docker-compose environment and volumes
+	@$(COMPOSE) down --volumes
+.PHONY: destroy
+
+lint: .env ## Run golangci-lint on all sub-packages within docker
+	@echo "🐳 Launching golangci-lint in docker..."
+	@$(COMPOSE) run --rm develop make _lint
+.PHONY: lint
+
+testacc: .env ## Run acceptance tests on all sub-packages within docker
+	@echo "🐳 Launching acceptance tests in docker..."
+	@$(COMPOSE) run --rm develop make _testacc
+.PHONY: testacc
+
+# -------------------------------------------------------------------------------------------
+# BUILD: Build the provider
+# -------------------------------------------------------------------------------------------
+build: ## Build the provider for local development
+	@echo "🛠️ Building the provider..."
+	@go build -o develop/terraform-provider-awx
+	@echo "🏁 Complete! Binary is located in develop/terraform-provider-awx."
+.PHONY: build
+
+terraform-plan: ## Run terraform plan to test the provider
+	@cd develop && terraform plan
+.PHONY: terraform-plan
+
+terraform-apply: ## Run terraform apply to test the provider
+	@cd develop && terraform apply -auto-approve
+.PHONY: terraform-apply
+
+# -------------------------------------------------------------------------------------------
+# DOCUMENTATION: Generate documentation
+# -------------------------------------------------------------------------------------------
+docs: ## Run go generate to create documentation in the docs subfolder
+	@go generate ./...
+	@git add docs/*
+.PHONY: docs
+
+# -------------------------------------------------------------------------------------------
+# HELPERS: Internal Make Commands
+# -------------------------------------------------------------------------------------------
+tidy: ## Run go mod tidy and go mod vendor
+	@go mod tidy && go mod vendor
+.PHONY: tidy
+
+.env:
+	@if [ ! -f "develop/.env" ]; then \
+	   echo "Creating environment file...\nPLEASE OVERRIDE VARIABLES IN develop/.env WITH YOUR OWN VALUES!"; \
+	   cp develop/example.env develop/.env; \
+	fi
+.PHONY: .env
+
+help: ## Display this help screen
+	@echo "\033[1m\033[01;32m\
+	$(shell echo $(PROJECT_NAME) | tr  '[:lower:]' '[:upper:]') $(VERSION) \
+	\033[00m\n"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' \
+	$(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; \
+	{printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+.PHONY: help
