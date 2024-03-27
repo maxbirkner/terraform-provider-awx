@@ -121,6 +121,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	client := http.DefaultClient
 	if d.Get("insecure").(bool) {
 		customTransport := http.DefaultTransport.(*http.Transport).Clone()
+		//nolint:gosec
 		customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		client.Transport = customTransport
 	}
