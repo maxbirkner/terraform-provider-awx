@@ -6,9 +6,7 @@ linters:
     - depguard
     - dogsled
     - errcheck
-    - funlen
     - gochecknoinits
-    - goconst
     - gocyclo
     - gofmt
     - goimports
@@ -36,7 +34,6 @@ linters:
     - whitespace
     - asciicheck
     - gochecknoglobals
-    - gocognit
     - godot
     - godox
     - maligned

@@ -36,6 +36,7 @@ jobs:
           version: "latest"
           skip-pkg-cache: true
           skip-build-cache: true
+          args: "--config=.golangci.yml"
 
   generate:
     runs-on: "ubuntu-latest"
