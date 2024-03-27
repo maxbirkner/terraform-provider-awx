@@ -224,49 +224,49 @@ func resourceWorkflowJobTemplateDelete(ctx context.Context, d *schema.ResourceDa
 func setWorkflowJobTemplateResourceData(d *schema.ResourceData, r *awx.WorkflowJobTemplate) *schema.ResourceData {
 
 	if err := d.Set("name", r.Name); err != nil {
-		return d
+		fmt.Println("Error setting name", err)
 	}
 	if err := d.Set("description", r.Description); err != nil {
-		return d
+		fmt.Println("Error setting description", err)
 	}
 	if err := d.Set("organization_id", strconv.Itoa(r.Organization)); err != nil {
-		return d
+		fmt.Println("Error setting organization_id", err)
 	}
 	if err := d.Set("inventory_id", strconv.Itoa(r.Inventory)); err != nil {
-		return d
+		fmt.Println("Error setting inventory_id", err)
 	}
 	if err := d.Set("survey_enabled", r.SurveyEnabled); err != nil {
-		return d
+		fmt.Println("Error setting survey_enabled", err)
 	}
 	if err := d.Set("allow_simultaneous", r.AllowSimultaneous); err != nil {
-		return d
+		fmt.Println("Error setting allow_simultaneous", err)
 	}
 	if err := d.Set("ask_variables_on_launch", r.AskVariablesOnLaunch); err != nil {
-		return d
+		fmt.Println("Error setting ask_variables_on_launch", err)
 	}
 	if err := d.Set("limit", r.Limit); err != nil {
-		return d
+		fmt.Println("Error setting limit", err)
 	}
 	if err := d.Set("scm_branch", r.ScmBranch); err != nil {
-		return d
+		fmt.Println("Error setting scm_branch", err)
 	}
 	if err := d.Set("ask_inventory_on_launch", r.AskInventoryOnLaunch); err != nil {
-		return d
+		fmt.Println("Error setting ask_inventory_on_launch", err)
 	}
 	if err := d.Set("ask_scm_branch_on_launch", r.AskScmBranchOnLaunch); err != nil {
-		return d
+		fmt.Println("Error setting ask_scm_branch_on_launch", err)
 	}
 	if err := d.Set("ask_limit_on_launch", r.AskLimitOnLaunch); err != nil {
-		return d
+		fmt.Println("Error setting ask_limit_on_launch", err)
 	}
 	if err := d.Set("webhook_service", r.WebhookService); err != nil {
-		return d
+		fmt.Println("Error setting webhook_service", err)
 	}
 	if err := d.Set("webhook_credential", r.WebhookCredential); err != nil {
-		return d
+		fmt.Println("Error setting webhook_credential", err)
 	}
 	if err := d.Set("variables", normalizeJsonYaml(r.ExtraVars)); err != nil {
-		return d
+		fmt.Println("Error setting variables", err)
 	}
 
 	d.SetId(strconv.Itoa(r.ID))

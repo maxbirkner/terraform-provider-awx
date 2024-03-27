@@ -2,6 +2,7 @@ package awx
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -88,7 +89,7 @@ func dataSourceJobTemplateRoleRead(ctx context.Context, d *schema.ResourceData, 
 
 func setJobTemplateRoleData(d *schema.ResourceData, r *awx.ApplyRole) *schema.ResourceData {
 	if err := d.Set("name", r.Name); err != nil {
-		return d
+		fmt.Println("Error setting name", err)
 	}
 	d.SetId(strconv.Itoa(r.ID))
 	return d

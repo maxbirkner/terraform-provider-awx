@@ -180,25 +180,25 @@ func resourceHostDelete(ctx context.Context, d *schema.ResourceData, m interface
 
 func setHostResourceData(d *schema.ResourceData, r *awx.Host) *schema.ResourceData {
 	if err := d.Set("name", r.Name); err != nil {
-		return d
+		fmt.Println("Error setting name", err)
 	}
 	if err := d.Set("description", r.Description); err != nil {
-		return d
+		fmt.Println("Error setting description", err)
 	}
 	if err := d.Set("inventory_id", r.Inventory); err != nil {
-		return d
+		fmt.Println("Error setting inventory_id", err)
 	}
 	if err := d.Set("enabled", r.Enabled); err != nil {
-		return d
+		fmt.Println("Error setting enabled", err)
 	}
 	if err := d.Set("instance_id", r.InstanceID); err != nil {
-		return d
+		fmt.Println("Error setting instance_id", err)
 	}
 	if err := d.Set("variables", normalizeJsonYaml(r.Variables)); err != nil {
-		return d
+		fmt.Println("Error setting variables", err)
 	}
 	if err := d.Set("group_ids", d.Get("group_ids").([]interface{})); err != nil {
-		return d
+		fmt.Println("Error setting group_ids", err)
 	}
 	return d
 }

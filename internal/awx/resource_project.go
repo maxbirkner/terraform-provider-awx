@@ -260,43 +260,43 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, m interf
 
 func setProjectResourceData(d *schema.ResourceData, r *awx.Project) *schema.ResourceData {
 	if err := d.Set("name", r.Name); err != nil {
-		return d
+		fmt.Println("Error setting name", err)
 	}
 	if err := d.Set("description", r.Description); err != nil {
-		return d
+		fmt.Println("Error setting description", err)
 	}
 	if err := d.Set("scm_type", r.ScmType); err != nil {
-		return d
+		fmt.Println("Error setting scm_type", err)
 	}
 	if err := d.Set("scm_url", r.ScmURL); err != nil {
-		return d
+		fmt.Println("Error setting scm_url", err)
 	}
 	if err := d.Set("scm_branch", r.ScmBranch); err != nil {
-		return d
+		fmt.Println("Error setting scm_branch", err)
 	}
 	if err := d.Set("scm_clean", r.ScmClean); err != nil {
-		return d
+		fmt.Println("Error setting scm_clean", err)
 	}
 	if err := d.Set("scm_delete_on_update", r.ScmDeleteOnUpdate); err != nil {
-		return d
+		fmt.Println("Error setting scm_delete_on_update", err)
 	}
 	if err := d.Set("organization_id", r.Organization); err != nil {
-		return d
+		fmt.Println("Error setting organization_id", err)
 	}
 
 	if id, err := strconv.Atoi(r.Credential); err == nil {
 		if err := d.Set("scm_credential_id", id); err != nil {
-			return d
+			fmt.Println("Error setting scm_credential_id", err)
 		}
 	}
 	if err := d.Set("scm_update_on_launch", r.ScmUpdateOnLaunch); err != nil {
-		return d
+		fmt.Println("Error setting scm_update_on_launch", err)
 	}
 	if err := d.Set("scm_update_cache_timeout", r.ScmUpdateCacheTimeout); err != nil {
-		return d
+		fmt.Println("Error setting scm_update_cache_timeout", err)
 	}
 	if err := d.Set("allow_override", r.AllowOverride); err != nil {
-		return d
+		fmt.Println("Error setting allow_override", err)
 	}
 
 	d.SetId(strconv.Itoa(r.ID))

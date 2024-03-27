@@ -219,13 +219,13 @@ func resourceTeamDelete(ctx context.Context, d *schema.ResourceData, m interface
 
 func setTeamResourceData(d *schema.ResourceData, r *awx.Team, e []*awx.ApplyRole) *schema.ResourceData {
 	if err := d.Set("name", r.Name); err != nil {
-		return d
+		fmt.Println("Error setting name", err)
 	}
 	if err := d.Set("description", r.Description); err != nil {
-		return d
+		fmt.Println("Error setting description", err)
 	}
 	if err := d.Set("organization_id", r.Organization); err != nil {
-		return d
+		fmt.Println("Error setting organization_id", err)
 	}
 
 	var entlist []interface{}
@@ -242,7 +242,7 @@ func setTeamResourceData(d *schema.ResourceData, r *awx.Team, e []*awx.ApplyRole
 	ent := schema.NewSet(f, entlist)
 
 	if err := d.Set("role_entitlement", ent); err != nil {
-		return d
+		fmt.Println("Error setting role_entitlement", err)
 	}
 
 	d.SetId(strconv.Itoa(r.ID))

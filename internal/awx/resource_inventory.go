@@ -143,22 +143,22 @@ func resourceInventoryDelete(ctx context.Context, d *schema.ResourceData, m inte
 
 func setInventoryResourceData(d *schema.ResourceData, r *awx.Inventory) *schema.ResourceData {
 	if err := d.Set("name", r.Name); err != nil {
-		return d
+		fmt.Println("Error setting name", err)
 	}
 	if err := d.Set("organization_id", strconv.Itoa(r.Organization)); err != nil {
-		return d
+		fmt.Println("Error setting organization_id", err)
 	}
 	if err := d.Set("description", r.Description); err != nil {
-		return d
+		fmt.Println("Error setting description", err)
 	}
 	if err := d.Set("kind", r.Kind); err != nil {
-		return d
+		fmt.Println("Error setting kind", err)
 	}
 	if err := d.Set("host_filter", r.HostFilter); err != nil {
-		return d
+		fmt.Println("Error setting host_filter", err)
 	}
 	if err := d.Set("variables", normalizeJsonYaml(r.Variables)); err != nil {
-		return d
+		fmt.Println("Error setting variables", err)
 	}
 	d.SetId(strconv.Itoa(r.ID))
 	return d

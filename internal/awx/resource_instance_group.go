@@ -139,13 +139,13 @@ func resourceInstanceGroupRead(ctx context.Context, d *schema.ResourceData, m in
 
 func setInstanceGroupResourceData(d *schema.ResourceData, r *awx.InstanceGroup) *schema.ResourceData {
 	if err := d.Set("name", r.Name); err != nil {
-		return d
+		fmt.Println("Error setting name", err)
 	}
 	if err := d.Set("is_container_group", r.IsContainerGroup); err != nil {
-		return d
+		fmt.Println("Error setting is_container_group", err)
 	}
 	if err := d.Set("pod_spec_override", normalizeJsonYaml(r.PodSpecOverride)); err != nil {
-		return d
+		fmt.Println("Error setting pod_spec_override", err)
 	}
 
 	d.SetId(strconv.Itoa(r.ID))

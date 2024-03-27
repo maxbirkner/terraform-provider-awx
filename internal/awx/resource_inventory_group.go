@@ -131,16 +131,16 @@ func resourceInventoryGroupRead(ctx context.Context, d *schema.ResourceData, m i
 
 func setInventoryGroupResourceData(d *schema.ResourceData, r *awx.Group) *schema.ResourceData {
 	if err := d.Set("name", r.Name); err != nil {
-		return d
+		fmt.Println("Error setting name", err)
 	}
 	if err := d.Set("description", r.Description); err != nil {
-		return d
+		fmt.Println("Error setting description", err)
 	}
 	if err := d.Set("inventory_id", r.Inventory); err != nil {
-		return d
+		fmt.Println("Error setting inventory_id", err)
 	}
 	if err := d.Set("variables", normalizeJsonYaml(r.Variables)); err != nil {
-		return d
+		fmt.Println("Error setting variables", err)
 	}
 
 	d.SetId(strconv.Itoa(r.ID))

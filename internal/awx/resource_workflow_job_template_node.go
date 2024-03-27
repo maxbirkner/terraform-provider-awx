@@ -248,44 +248,44 @@ func resourceWorkflowJobTemplateNodeDelete(ctx context.Context, d *schema.Resour
 func setWorkflowJobTemplateNodeResourceData(d *schema.ResourceData, r *awx.WorkflowJobTemplateNode) *schema.ResourceData {
 
 	if err := d.Set("extra_data", normalizeJsonYaml(r.ExtraData)); err != nil {
-		return d
+		fmt.Println("Error setting extra_data", err)
 	}
 	if err := d.Set("inventory_id", strconv.Itoa(r.Inventory)); err != nil {
-		return d
+		fmt.Println("Error setting inventory_id", err)
 	}
 	if err := d.Set("scm_branch", r.ScmBranch); err != nil {
-		return d
+		fmt.Println("Error setting scm_branch", err)
 	}
 	if err := d.Set("job_type", r.JobType); err != nil {
-		return d
+		fmt.Println("Error setting job_type", err)
 	}
 	if err := d.Set("job_tags", r.JobTags); err != nil {
-		return d
+		fmt.Println("Error setting job_tags", err)
 	}
 	if err := d.Set("skip_tags", r.SkipTags); err != nil {
-		return d
+		fmt.Println("Error setting skip_tags", err)
 	}
 	if err := d.Set("limit", r.Limit); err != nil {
-		return d
+		fmt.Println("Error setting limit", err)
 	}
 	if err := d.Set("diff_mode", r.DiffMode); err != nil {
-		return d
+		fmt.Println("Error setting diff_mode", err)
 	}
 	if err := d.Set("verbosity", r.Verbosity); err != nil {
-		return d
+		fmt.Println("Error setting verbosity", err)
 	}
 
 	if err := d.Set("workflow_job_template_id", strconv.Itoa(r.WorkflowJobTemplate)); err != nil {
-		return d
+		fmt.Println("Error setting workflow_job_template_id", err)
 	}
 	if err := d.Set("unified_job_template_id", strconv.Itoa(r.UnifiedJobTemplate)); err != nil {
-		return d
+		fmt.Println("Error setting unified_job_template_id", err)
 	}
 	if err := d.Set("all_parents_must_converge", r.AllParentsMustConverge); err != nil {
-		return d
+		fmt.Println("Error setting all_parents_must_converge", err)
 	}
 	if err := d.Set("identifier", r.Identifier); err != nil {
-		return d
+		fmt.Println("Error setting identifier", err)
 	}
 
 	d.SetId(strconv.Itoa(r.ID))

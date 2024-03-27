@@ -251,69 +251,69 @@ func resourceInventorySourceRead(ctx context.Context, d *schema.ResourceData, m 
 
 func setInventorySourceResourceData(d *schema.ResourceData, r *awx.InventorySource) *schema.ResourceData {
 	if err := d.Set("name", r.Name); err != nil {
-		return d
+		fmt.Println("Error setting name", err)
 	}
 	if err := d.Set("description", r.Description); err != nil {
-		return d
+		fmt.Println("Error setting description", err)
 	}
 	if err := d.Set("enabled_var", r.EnabledVar); err != nil {
-		return d
+		fmt.Println("Error setting enabled_var", err)
 	}
 	if err := d.Set("enabled_value", r.EnabledValue); err != nil {
-		return d
+		fmt.Println("Error setting enabled_value", err)
 	}
 	if err := d.Set("overwrite", r.Overwrite); err != nil {
-		return d
+		fmt.Println("Error setting overwrite", err)
 	}
 	if err := d.Set("overwrite_vars", r.OverwriteVars); err != nil {
-		return d
+		fmt.Println("Error setting overwrite_vars", err)
 	}
 	if err := d.Set("update_on_launch", r.UpdateOnLaunch); err != nil {
-		return d
+		fmt.Println("Error setting update_on_launch", err)
 	}
 	if err := d.Set("inventory_id", r.Inventory); err != nil {
-		return d
+		fmt.Println("Error setting inventory_id", err)
 	}
 	if err := d.Set("credential_id", r.Credential); err != nil {
-		return d
+		fmt.Println("Error setting credential_id", err)
 	}
 	if err := d.Set("source", r.Source); err != nil {
-		return d
+		fmt.Println("Error setting source", err)
 	}
 	if err := d.Set("source_vars", normalizeJsonYaml(r.SourceVars)); err != nil {
-		return d
+		fmt.Println("Error setting source_vars", err)
 	}
 	if err := d.Set("host_filter", r.HostFilter); err != nil {
-		return d
+		fmt.Println("Error setting host_filter", err)
 	}
 	if err := d.Set("update_cache_timeout", r.UpdateCacheTimeout); err != nil {
-		return d
+		fmt.Println("Error setting update_cache_timeout", err)
 	}
 	if err := d.Set("verbosity", r.Verbosity); err != nil {
-		return d
+		fmt.Println("Error setting verbosity", err)
 	}
 	if err := d.Set("source_project_id", r.SourceProject); err != nil {
-		return d
+		fmt.Println("Error setting source_project_id", err)
 	}
 	if err := d.Set("source_path", r.SourcePath); err != nil {
-		return d
+		fmt.Println("Error setting source_path", err)
 	}
 	// obsolete schema added so terraform doesn't break
 	// these don't do anything in later versions of AWX! Update your code.
 	if err := d.Set("source_regions", r.SourceRegions); err != nil {
-		return d
+		fmt.Println("Error setting source_regions", err)
 	}
 	if err := d.Set("instance_filters", r.InstanceFilters); err != nil {
-		return d
+		fmt.Println("Error setting instance_filters", err)
 	}
 	if err := d.Set("group_by", r.GroupBy); err != nil {
-		return d
+		fmt.Println("Error setting group_by", err)
 	}
 	if err := d.Set("source_project_id", r.SourceProject); err != nil {
-		return d
+		fmt.Println("Error setting source_project_id", err)
 	}
 	if err := d.Set("source_path", r.SourcePath); err != nil {
-		return d
+		fmt.Println("Error setting source_path", err)
 	}
 
 	return d

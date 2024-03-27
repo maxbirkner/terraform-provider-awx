@@ -335,85 +335,85 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, m inte
 
 func setJobTemplateResourceData(d *schema.ResourceData, r *awx.JobTemplate) *schema.ResourceData {
 	if err := d.Set("allow_simultaneous", r.AllowSimultaneous); err != nil {
-		return d
+		fmt.Println("Error setting allow_simultaneous", err)
 	}
 	if err := d.Set("ask_credential_on_launch", r.AskCredentialOnLaunch); err != nil {
-		return d
+		fmt.Println("Error setting ask_credential_on_launch", err)
 	}
 	if err := d.Set("ask_job_type_on_launch", r.AskJobTypeOnLaunch); err != nil {
-		return d
+		fmt.Println("Error setting ask_job_type_on_launch", err)
 	}
 	if err := d.Set("ask_limit_on_launch", r.AskLimitOnLaunch); err != nil {
-		return d
+		fmt.Println("Error setting ask_limit_on_launch", err)
 	}
 	if err := d.Set("ask_skip_tags_on_launch", r.AskSkipTagsOnLaunch); err != nil {
-		return d
+		fmt.Println("Error setting ask_skip_tags_on_launch", err)
 	}
 	if err := d.Set("ask_tags_on_launch", r.AskTagsOnLaunch); err != nil {
-		return d
+		fmt.Println("Error setting ask_tags_on_launch", err)
 	}
 	if err := d.Set("ask_variables_on_launch", r.AskVariablesOnLaunch); err != nil {
-		return d
+		fmt.Println("Error setting ask_variables_on_launch", err)
 	}
 	if err := d.Set("description", r.Description); err != nil {
-		return d
+		fmt.Println("Error setting description", err)
 	}
 	if err := d.Set("extra_vars", normalizeJsonYaml(r.ExtraVars)); err != nil {
-		return d
+		fmt.Println("Error setting extra_vars", err)
 	}
 	if err := d.Set("force_handlers", r.ForceHandlers); err != nil {
-		return d
+		fmt.Println("Error setting force_handlers", err)
 	}
 	if err := d.Set("forks", r.Forks); err != nil {
-		return d
+		fmt.Println("Error setting forks", err)
 	}
 	if err := d.Set("host_config_key", r.HostConfigKey); err != nil {
-		return d
+		fmt.Println("Error setting host_config_key", err)
 	}
 	if err := d.Set("inventory_id", r.Inventory); err != nil {
-		return d
+		fmt.Println("Error setting inventory_id", err)
 	}
 	if err := d.Set("job_tags", r.JobTags); err != nil {
-		return d
+		fmt.Println("Error setting job_tags", err)
 	}
 	if err := d.Set("job_type", r.JobType); err != nil {
-		return d
+		fmt.Println("Error setting job_type", err)
 	}
 	if err := d.Set("diff_mode", r.DiffMode); err != nil {
-		return d
+		fmt.Println("Error setting diff_mode", err)
 	}
 	if err := d.Set("custom_virtualenv", r.CustomVirtualenv); err != nil {
-		return d
+		fmt.Println("Error setting custom_virtualenv", err)
 	}
 	if err := d.Set("limit", r.Limit); err != nil {
-		return d
+		fmt.Println("Error setting limit", err)
 	}
 	if err := d.Set("name", r.Name); err != nil {
-		return d
+		fmt.Println("Error setting name", err)
 	}
 	if err := d.Set("become_enabled", r.BecomeEnabled); err != nil {
-		return d
+		fmt.Println("Error setting become_enabled", err)
 	}
 	if err := d.Set("use_fact_cache", r.UseFactCache); err != nil {
-		return d
+		fmt.Println("Error setting use_fact_cache", err)
 	}
 	if err := d.Set("playbook", r.Playbook); err != nil {
-		return d
+		fmt.Println("Error setting playbook", err)
 	}
 	if err := d.Set("project_id", r.Project); err != nil {
-		return d
+		fmt.Println("Error setting project_id", err)
 	}
 	if err := d.Set("skip_tags", r.SkipTags); err != nil {
-		return d
+		fmt.Println("Error setting skip_tags", err)
 	}
 	if err := d.Set("start_at_task", r.StartAtTask); err != nil {
-		return d
+		fmt.Println("Error setting start_at_task", err)
 	}
 	if err := d.Set("survey_enabled", r.SurveyEnabled); err != nil {
-		return d
+		fmt.Println("Error setting survey_enabled", err)
 	}
 	if err := d.Set("verbosity", r.Verbosity); err != nil {
-		return d
+		fmt.Println("Error setting verbosity", err)
 	}
 	d.SetId(strconv.Itoa(r.ID))
 	return d
