@@ -64,11 +64,21 @@ func dataSourceCredentialByIDRead(ctx context.Context, d *schema.ResourceData, m
 		})
 	}
 
-	d.Set("username", cred.Inputs["username"])
-	d.Set("kind", cred.Kind)
-	d.Set("tower_id", id)
-	d.Set("description", cred.Description)
-	d.Set("name", cred.Name)
+	if err := d.Set("username", cred.Inputs["username"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("kind", cred.Kind); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("tower_id", id); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", cred.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("name", cred.Name); err != nil {
+		return diag.FromErr(err)
+	}
 	d.SetId(strconv.Itoa(id))
 	// d.SetId(strconv.FormatInt(time.Now().Unix(), 10))
 

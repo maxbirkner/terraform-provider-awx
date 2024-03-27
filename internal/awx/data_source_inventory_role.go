@@ -87,7 +87,9 @@ func dataSourceInventoryRoleRead(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func setInventoryRoleData(d *schema.ResourceData, r *awx.ApplyRole) *schema.ResourceData {
-	d.Set("name", r.Name)
+	if err := d.Set("name", r.Name); err != nil {
+		return d
+	}
 	d.SetId(strconv.Itoa(r.ID))
 	return d
 }

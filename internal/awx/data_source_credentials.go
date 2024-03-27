@@ -77,8 +77,7 @@ func dataSourceCredentialsRead(ctx context.Context, d *schema.ResourceData, m in
 		})
 	}
 
-	err = d.Set("credentials", parsedCreds)
-	if err != nil {
+	if err := d.Set("credentials", parsedCreds); err != nil {
 		return diag.FromErr(err)
 	}
 

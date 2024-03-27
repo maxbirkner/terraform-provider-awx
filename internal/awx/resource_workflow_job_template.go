@@ -223,21 +223,51 @@ func resourceWorkflowJobTemplateDelete(ctx context.Context, d *schema.ResourceDa
 
 func setWorkflowJobTemplateResourceData(d *schema.ResourceData, r *awx.WorkflowJobTemplate) *schema.ResourceData {
 
-	d.Set("name", r.Name)
-	d.Set("description", r.Description)
-	d.Set("organization_id", strconv.Itoa(r.Organization))
-	d.Set("inventory_id", strconv.Itoa(r.Inventory))
-	d.Set("survey_enabled", r.SurveyEnabled)
-	d.Set("allow_simultaneous", r.AllowSimultaneous)
-	d.Set("ask_variables_on_launch", r.AskVariablesOnLaunch)
-	d.Set("limit", r.Limit)
-	d.Set("scm_branch", r.ScmBranch)
-	d.Set("ask_inventory_on_launch", r.AskInventoryOnLaunch)
-	d.Set("ask_scm_branch_on_launch", r.AskScmBranchOnLaunch)
-	d.Set("ask_limit_on_launch", r.AskLimitOnLaunch)
-	d.Set("webhook_service", r.WebhookService)
-	d.Set("webhook_credential", r.WebhookCredential)
-	d.Set("variables", normalizeJsonYaml(r.ExtraVars))
+	if err := d.Set("name", r.Name); err != nil {
+		return d
+	}
+	if err := d.Set("description", r.Description); err != nil {
+		return d
+	}
+	if err := d.Set("organization_id", strconv.Itoa(r.Organization)); err != nil {
+		return d
+	}
+	if err := d.Set("inventory_id", strconv.Itoa(r.Inventory)); err != nil {
+		return d
+	}
+	if err := d.Set("survey_enabled", r.SurveyEnabled); err != nil {
+		return d
+	}
+	if err := d.Set("allow_simultaneous", r.AllowSimultaneous); err != nil {
+		return d
+	}
+	if err := d.Set("ask_variables_on_launch", r.AskVariablesOnLaunch); err != nil {
+		return d
+	}
+	if err := d.Set("limit", r.Limit); err != nil {
+		return d
+	}
+	if err := d.Set("scm_branch", r.ScmBranch); err != nil {
+		return d
+	}
+	if err := d.Set("ask_inventory_on_launch", r.AskInventoryOnLaunch); err != nil {
+		return d
+	}
+	if err := d.Set("ask_scm_branch_on_launch", r.AskScmBranchOnLaunch); err != nil {
+		return d
+	}
+	if err := d.Set("ask_limit_on_launch", r.AskLimitOnLaunch); err != nil {
+		return d
+	}
+	if err := d.Set("webhook_service", r.WebhookService); err != nil {
+		return d
+	}
+	if err := d.Set("webhook_credential", r.WebhookCredential); err != nil {
+		return d
+	}
+	if err := d.Set("variables", normalizeJsonYaml(r.ExtraVars)); err != nil {
+		return d
+	}
 
 	d.SetId(strconv.Itoa(r.ID))
 	return d

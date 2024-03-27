@@ -94,11 +94,21 @@ func resourceCredentialInputSourceRead(ctx context.Context, d *schema.ResourceDa
 		return diags
 	}
 
-	d.Set("description", inputSource.Description)
-	d.Set("input_field_name", inputSource.InputFieldName)
-	d.Set("target", inputSource.TargetCredential)
-	d.Set("source", inputSource.SourceCredential)
-	d.Set("metadata", inputSource.Metadata)
+	if err := d.Set("description", inputSource.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("input_field_name", inputSource.InputFieldName); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("target", inputSource.TargetCredential); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("source", inputSource.SourceCredential); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("metadata", inputSource.Metadata); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return diags
 }

@@ -10,6 +10,7 @@ import (
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
 )
 
+//nolint:funlen
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		Description:   "This resource allows you to create, update, and delete a user in AWX.",

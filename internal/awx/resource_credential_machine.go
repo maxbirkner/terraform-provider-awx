@@ -10,6 +10,7 @@ import (
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
 )
 
+//nolint:funlen
 func resourceCredentialMachine() *schema.Resource {
 	return &schema.Resource{
 		Description:   "The `awx_credential_machine` resource allows creation and management of machine credentials within an AWX instance.",

@@ -101,12 +101,24 @@ func resourceCredentialGalaxyRead(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
-	d.Set("name", cred.Name)
-	d.Set("description", cred.Description)
-	d.Set("url", cred.Inputs["url"])
-	d.Set("auth_url", cred.Inputs["auth_url"])
-	d.Set("token", cred.Inputs["token"])
-	d.Set("organization_id", cred.OrganizationID)
+	if err := d.Set("name", cred.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", cred.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("url", cred.Inputs["url"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("auth_url", cred.Inputs["auth_url"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("token", cred.Inputs["token"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("organization_id", cred.OrganizationID); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return diags
 }

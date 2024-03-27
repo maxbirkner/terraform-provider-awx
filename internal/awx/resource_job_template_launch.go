@@ -14,6 +14,7 @@ import (
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
 )
 
+//nolint:funlen
 func resourceJobTemplateLaunch() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Resource `awx_job_template_launch` manages job template launch.",

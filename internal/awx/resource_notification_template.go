@@ -172,11 +172,21 @@ func resourceNotificationTemplateDelete(ctx context.Context, d *schema.ResourceD
 }
 
 func setNotificationTemplateResourceData(d *schema.ResourceData, r *awx.NotificationTemplate) *schema.ResourceData {
-	d.Set("name", r.Name)
-	d.Set("description", r.Description)
-	d.Set("organization", r.Organization)
-	d.Set("notification_type", r.NotificationType)
-	d.Set("notification_configuration", r.NotificationConfiguration)
+	if err := d.Set("name", r.Name); err != nil {
+		return d
+	}
+	if err := d.Set("description", r.Description); err != nil {
+		return d
+	}
+	if err := d.Set("organization", r.Organization); err != nil {
+		return d
+	}
+	if err := d.Set("notification_type", r.NotificationType); err != nil {
+		return d
+	}
+	if err := d.Set("notification_configuration", r.NotificationConfiguration); err != nil {
+		return d
+	}
 	d.SetId(strconv.Itoa(r.ID))
 	return d
 }

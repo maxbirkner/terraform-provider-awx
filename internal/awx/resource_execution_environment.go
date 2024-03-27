@@ -151,11 +151,21 @@ func resourceExecutionEnvironmentsDelete(ctx context.Context, d *schema.Resource
 }
 
 func setExecutionEnvironmentsResourceData(d *schema.ResourceData, r *awx.ExecutionEnvironment) *schema.ResourceData {
-	d.Set("name", r.Name)
-	d.Set("image", r.Image)
-	d.Set("description", r.Description)
-	d.Set("organization", r.Organization)
-	d.Set("credential", r.Credential)
+	if err := d.Set("name", r.Name); err != nil {
+		return d
+	}
+	if err := d.Set("image", r.Image); err != nil {
+		return d
+	}
+	if err := d.Set("description", r.Description); err != nil {
+		return d
+	}
+	if err := d.Set("organization", r.Organization); err != nil {
+		return d
+	}
+	if err := d.Set("credential", r.Credential); err != nil {
+		return d
+	}
 	d.SetId(strconv.Itoa(r.ID))
 	return d
 }

@@ -107,13 +107,27 @@ func resourceCredentialAzureKeyVaultRead(ctx context.Context, d *schema.Resource
 		return diags
 	}
 
-	d.Set("name", cred.Name)
-	d.Set("description", cred.Description)
-	d.Set("organization_id", cred.OrganizationID)
-	d.Set("url", cred.Inputs["url"])
-	d.Set("client", cred.Inputs["client"])
-	d.Set("secret", d.Get("secret").(string))
-	d.Set("tenant", cred.Inputs["tenant"])
+	if err := d.Set("name", cred.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", cred.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("organization_id", cred.OrganizationID); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("url", cred.Inputs["url"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("client", cred.Inputs["client"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("secret", d.Get("secret").(string)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("tenant", cred.Inputs["tenant"]); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return diags
 }

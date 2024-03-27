@@ -10,6 +10,7 @@ import (
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
 )
 
+//nolint:funlen
 func resourceInventorySource() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Resource Inventory Source is used to manage inventory sources in AWX.",
@@ -249,29 +250,71 @@ func resourceInventorySourceRead(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func setInventorySourceResourceData(d *schema.ResourceData, r *awx.InventorySource) *schema.ResourceData {
-	d.Set("name", r.Name)
-	d.Set("description", r.Description)
-	d.Set("enabled_var", r.EnabledVar)
-	d.Set("enabled_value", r.EnabledValue)
-	d.Set("overwrite", r.Overwrite)
-	d.Set("overwrite_vars", r.OverwriteVars)
-	d.Set("update_on_launch", r.UpdateOnLaunch)
-	d.Set("inventory_id", r.Inventory)
-	d.Set("credential_id", r.Credential)
-	d.Set("source", r.Source)
-	d.Set("source_vars", normalizeJsonYaml(r.SourceVars))
-	d.Set("host_filter", r.HostFilter)
-	d.Set("update_cache_timeout", r.UpdateCacheTimeout)
-	d.Set("verbosity", r.Verbosity)
-	d.Set("source_project_id", r.SourceProject)
-	d.Set("source_path", r.SourcePath)
+	if err := d.Set("name", r.Name); err != nil {
+		return d
+	}
+	if err := d.Set("description", r.Description); err != nil {
+		return d
+	}
+	if err := d.Set("enabled_var", r.EnabledVar); err != nil {
+		return d
+	}
+	if err := d.Set("enabled_value", r.EnabledValue); err != nil {
+		return d
+	}
+	if err := d.Set("overwrite", r.Overwrite); err != nil {
+		return d
+	}
+	if err := d.Set("overwrite_vars", r.OverwriteVars); err != nil {
+		return d
+	}
+	if err := d.Set("update_on_launch", r.UpdateOnLaunch); err != nil {
+		return d
+	}
+	if err := d.Set("inventory_id", r.Inventory); err != nil {
+		return d
+	}
+	if err := d.Set("credential_id", r.Credential); err != nil {
+		return d
+	}
+	if err := d.Set("source", r.Source); err != nil {
+		return d
+	}
+	if err := d.Set("source_vars", normalizeJsonYaml(r.SourceVars)); err != nil {
+		return d
+	}
+	if err := d.Set("host_filter", r.HostFilter); err != nil {
+		return d
+	}
+	if err := d.Set("update_cache_timeout", r.UpdateCacheTimeout); err != nil {
+		return d
+	}
+	if err := d.Set("verbosity", r.Verbosity); err != nil {
+		return d
+	}
+	if err := d.Set("source_project_id", r.SourceProject); err != nil {
+		return d
+	}
+	if err := d.Set("source_path", r.SourcePath); err != nil {
+		return d
+	}
 	// obsolete schema added so terraform doesn't break
 	// these don't do anything in later versions of AWX! Update your code.
-	d.Set("source_regions", r.SourceRegions)
-	d.Set("instance_filters", r.InstanceFilters)
-	d.Set("group_by", r.GroupBy)
-	d.Set("source_project_id", r.SourceProject)
-	d.Set("source_path", r.SourcePath)
+	if err := d.Set("source_regions", r.SourceRegions); err != nil {
+		return d
+	}
+	if err := d.Set("instance_filters", r.InstanceFilters); err != nil {
+		return d
+	}
+	if err := d.Set("group_by", r.GroupBy); err != nil {
+		return d
+	}
+	if err := d.Set("source_project_id", r.SourceProject); err != nil {
+		return d
+	}
+	if err := d.Set("source_path", r.SourcePath); err != nil {
+		return d
+	}
 
 	return d
 }

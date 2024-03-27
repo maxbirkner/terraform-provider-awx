@@ -101,11 +101,21 @@ func resourceCredentialGoogleComputeEngineRead(ctx context.Context, d *schema.Re
 		return diags
 	}
 
-	d.Set("name", cred.Name)
-	d.Set("description", cred.Description)
-	d.Set("organization_id", cred.OrganizationID)
-	d.Set("username", cred.Inputs["username"])
-	d.Set("project", cred.Inputs["project"])
+	if err := d.Set("name", cred.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", cred.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("organization_id", cred.OrganizationID); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("username", cred.Inputs["username"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("project", cred.Inputs["project"]); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return diags
 }

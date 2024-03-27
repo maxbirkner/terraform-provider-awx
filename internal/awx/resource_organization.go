@@ -158,10 +158,18 @@ func resourceOrganizationsDelete(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func setOrganizationsResourceData(d *schema.ResourceData, r *awx.Organization) *schema.ResourceData {
-	d.Set("name", r.Name)
-	d.Set("description", r.Description)
-	d.Set("max_hosts", r.MaxHosts)
-	d.Set("custom_virtualenv", r.CustomVirtualenv)
+	if err := d.Set("name", r.Name); err != nil {
+		return d
+	}
+	if err := d.Set("description", r.Description); err != nil {
+		return d
+	}
+	if err := d.Set("max_hosts", r.MaxHosts); err != nil {
+		return d
+	}
+	if err := d.Set("custom_virtualenv", r.CustomVirtualenv); err != nil {
+		return d
+	}
 	d.SetId(strconv.Itoa(r.ID))
 	return d
 }

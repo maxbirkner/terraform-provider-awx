@@ -11,6 +11,7 @@ import (
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
 )
 
+//nolint:funlen
 func resourceProject() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Resource `awx_project` manages projects within an organization.",

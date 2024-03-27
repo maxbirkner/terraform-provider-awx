@@ -173,13 +173,27 @@ func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, m inter
 }
 
 func setScheduleResourceData(d *schema.ResourceData, r *awx.Schedule) *schema.ResourceData {
-	d.Set("name", r.Name)
-	d.Set("rrule", r.Rrule)
-	d.Set("unified_job_template_id", r.UnifiedJobTemplate)
-	d.Set("description", r.Description)
-	d.Set("enabled", r.Enabled)
-	d.Set("inventory", r.Inventory)
-	d.Set("extra_data", marshalYaml(r.ExtraData))
+	if err := d.Set("name", r.Name); err != nil {
+		return d
+	}
+	if err := d.Set("rrule", r.Rrule); err != nil {
+		return d
+	}
+	if err := d.Set("unified_job_template_id", r.UnifiedJobTemplate); err != nil {
+		return d
+	}
+	if err := d.Set("description", r.Description); err != nil {
+		return d
+	}
+	if err := d.Set("enabled", r.Enabled); err != nil {
+		return d
+	}
+	if err := d.Set("inventory", r.Inventory); err != nil {
+		return d
+	}
+	if err := d.Set("extra_data", marshalYaml(r.ExtraData)); err != nil {
+		return d
+	}
 	d.SetId(strconv.Itoa(r.ID))
 	return d
 }

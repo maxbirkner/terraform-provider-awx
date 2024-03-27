@@ -12,6 +12,7 @@ import (
 	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
+//nolint:funlen
 func resourceJobTemplate() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Resource `awx_job_template` manages job templates within AWX.",
@@ -333,33 +334,87 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, m inte
 }
 
 func setJobTemplateResourceData(d *schema.ResourceData, r *awx.JobTemplate) *schema.ResourceData {
-	d.Set("allow_simultaneous", r.AllowSimultaneous)
-	d.Set("ask_credential_on_launch", r.AskCredentialOnLaunch)
-	d.Set("ask_job_type_on_launch", r.AskJobTypeOnLaunch)
-	d.Set("ask_limit_on_launch", r.AskLimitOnLaunch)
-	d.Set("ask_skip_tags_on_launch", r.AskSkipTagsOnLaunch)
-	d.Set("ask_tags_on_launch", r.AskTagsOnLaunch)
-	d.Set("ask_variables_on_launch", r.AskVariablesOnLaunch)
-	d.Set("description", r.Description)
-	d.Set("extra_vars", normalizeJsonYaml(r.ExtraVars))
-	d.Set("force_handlers", r.ForceHandlers)
-	d.Set("forks", r.Forks)
-	d.Set("host_config_key", r.HostConfigKey)
-	d.Set("inventory_id", r.Inventory)
-	d.Set("job_tags", r.JobTags)
-	d.Set("job_type", r.JobType)
-	d.Set("diff_mode", r.DiffMode)
-	d.Set("custom_virtualenv", r.CustomVirtualenv)
-	d.Set("limit", r.Limit)
-	d.Set("name", r.Name)
-	d.Set("become_enabled", r.BecomeEnabled)
-	d.Set("use_fact_cache", r.UseFactCache)
-	d.Set("playbook", r.Playbook)
-	d.Set("project_id", r.Project)
-	d.Set("skip_tags", r.SkipTags)
-	d.Set("start_at_task", r.StartAtTask)
-	d.Set("survey_enabled", r.SurveyEnabled)
-	d.Set("verbosity", r.Verbosity)
+	if err := d.Set("allow_simultaneous", r.AllowSimultaneous); err != nil {
+		return d
+	}
+	if err := d.Set("ask_credential_on_launch", r.AskCredentialOnLaunch); err != nil {
+		return d
+	}
+	if err := d.Set("ask_job_type_on_launch", r.AskJobTypeOnLaunch); err != nil {
+		return d
+	}
+	if err := d.Set("ask_limit_on_launch", r.AskLimitOnLaunch); err != nil {
+		return d
+	}
+	if err := d.Set("ask_skip_tags_on_launch", r.AskSkipTagsOnLaunch); err != nil {
+		return d
+	}
+	if err := d.Set("ask_tags_on_launch", r.AskTagsOnLaunch); err != nil {
+		return d
+	}
+	if err := d.Set("ask_variables_on_launch", r.AskVariablesOnLaunch); err != nil {
+		return d
+	}
+	if err := d.Set("description", r.Description); err != nil {
+		return d
+	}
+	if err := d.Set("extra_vars", normalizeJsonYaml(r.ExtraVars)); err != nil {
+		return d
+	}
+	if err := d.Set("force_handlers", r.ForceHandlers); err != nil {
+		return d
+	}
+	if err := d.Set("forks", r.Forks); err != nil {
+		return d
+	}
+	if err := d.Set("host_config_key", r.HostConfigKey); err != nil {
+		return d
+	}
+	if err := d.Set("inventory_id", r.Inventory); err != nil {
+		return d
+	}
+	if err := d.Set("job_tags", r.JobTags); err != nil {
+		return d
+	}
+	if err := d.Set("job_type", r.JobType); err != nil {
+		return d
+	}
+	if err := d.Set("diff_mode", r.DiffMode); err != nil {
+		return d
+	}
+	if err := d.Set("custom_virtualenv", r.CustomVirtualenv); err != nil {
+		return d
+	}
+	if err := d.Set("limit", r.Limit); err != nil {
+		return d
+	}
+	if err := d.Set("name", r.Name); err != nil {
+		return d
+	}
+	if err := d.Set("become_enabled", r.BecomeEnabled); err != nil {
+		return d
+	}
+	if err := d.Set("use_fact_cache", r.UseFactCache); err != nil {
+		return d
+	}
+	if err := d.Set("playbook", r.Playbook); err != nil {
+		return d
+	}
+	if err := d.Set("project_id", r.Project); err != nil {
+		return d
+	}
+	if err := d.Set("skip_tags", r.SkipTags); err != nil {
+		return d
+	}
+	if err := d.Set("start_at_task", r.StartAtTask); err != nil {
+		return d
+	}
+	if err := d.Set("survey_enabled", r.SurveyEnabled); err != nil {
+		return d
+	}
+	if err := d.Set("verbosity", r.Verbosity); err != nil {
+		return d
+	}
 	d.SetId(strconv.Itoa(r.ID))
 	return d
 }

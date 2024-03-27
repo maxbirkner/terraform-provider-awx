@@ -119,11 +119,21 @@ func resourceCredentialTypeRead(ctx context.Context, d *schema.ResourceData, m i
 		return diags
 	}
 
-	d.Set("name", credtype.Name)
-	d.Set("description", credtype.Description)
-	d.Set("kind", credtype.Kind)
-	d.Set("inputs", credtype.Inputs)
-	d.Set("injectors", credtype.Injectors)
+	if err := d.Set("name", credtype.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", credtype.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("kind", credtype.Kind); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("inputs", credtype.Inputs); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("injectors", credtype.Injectors); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return diags
 }

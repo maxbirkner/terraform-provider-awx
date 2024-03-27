@@ -63,11 +63,21 @@ func dataSourceCredentialTypeByIDRead(ctx context.Context, d *schema.ResourceDat
 		})
 	}
 
-	d.Set("name", credType.Name)
-	d.Set("description", credType.Description)
-	d.Set("kind", credType.Kind)
-	d.Set("inputs", credType.Inputs)
-	d.Set("injectors", credType.Injectors)
+	if err := d.Set("name", credType.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", credType.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("kind", credType.Kind); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("inputs", credType.Inputs); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("injectors", credType.Injectors); err != nil {
+		return diag.FromErr(err)
+	}
 	d.SetId(strconv.Itoa(id))
 
 	return diags
