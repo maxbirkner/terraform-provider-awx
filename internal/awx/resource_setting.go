@@ -44,8 +44,6 @@ func resourceSetting() *schema.Resource {
 	}
 }
 
-type setting map[string]string
-
 func resourceSettingUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
 	awxService := client.SettingService

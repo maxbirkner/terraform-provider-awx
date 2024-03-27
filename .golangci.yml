@@ -3,7 +3,6 @@ linters:
   enable:
     - bodyclose
     - deadcode
-    - depguard
     - errcheck
     - gochecknoinits
     - gocyclo
@@ -22,7 +21,6 @@ linters:
     - unconvert
     - unused
     - varcheck
-    - whitespace
     - asciicheck
     # don't enable:
     #- nestif
