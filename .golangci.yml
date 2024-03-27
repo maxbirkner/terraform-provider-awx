@@ -12,14 +12,9 @@ linters:
     - gosec
     - gosimple
     - govet
-    - ineffassign
     - scopelint
-    - structcheck
-    - stylecheck
-    - typecheck
     - unconvert
     - unused
-    - varcheck
     - asciicheck
     # don't enable:
     #- nestif
