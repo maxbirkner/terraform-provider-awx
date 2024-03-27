@@ -216,13 +216,27 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 		return buildDiagNotFoundFail("user roles", id, err)
 	}
 
-	d.Set("username", res.Username)
-	d.Set("password", res.Password)
-	d.Set("first_name", res.FirstName)
-	d.Set("last_name", res.LastName)
-	d.Set("email", res.Email)
-	d.Set("is_superuser", res.IsSuperUser)
-	d.Set("is_system_auditor", res.IsSystemAuditor)
+	if err := d.Set("username", res.Username); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("password", res.Password); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("first_name", res.FirstName); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("last_name", res.LastName); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("email", res.Email); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_superuser", res.IsSuperUser); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_system_auditor", res.IsSystemAuditor); err != nil {
+		return diag.FromErr(err)
+	}
 
 	var entlist []interface{}
 	for _, v := range entitlements {
@@ -237,7 +251,9 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, m interface{}
 
 	ent := schema.NewSet(f, entlist)
 
-	d.Set("role_entitlement", ent)
+	if err := d.Set("role_entitlement", ent); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return diags
 }

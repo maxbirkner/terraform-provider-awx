@@ -135,17 +135,39 @@ func resourceCredentialMachineRead(ctx context.Context, d *schema.ResourceData, 
 		return diags
 	}
 
-	d.Set("name", cred.Name)
-	d.Set("description", cred.Description)
-	d.Set("username", cred.Inputs["username"])
-	d.Set("password", cred.Inputs["password"])
-	d.Set("ssh_key_data", cred.Inputs["ssh_key_data"])
-	d.Set("ssh_public_key_data", cred.Inputs["ssh_public_key_data"])
-	d.Set("ssh_key_unlock", cred.Inputs["ssh_key_unlock"])
-	d.Set("become_method", cred.Inputs["become_method"])
-	d.Set("become_username", cred.Inputs["become_username"])
-	d.Set("become_password", cred.Inputs["become_password"])
-	d.Set("organization_id", cred.OrganizationID)
+	if err := d.Set("name", cred.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", cred.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("username", cred.Inputs["username"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("password", cred.Inputs["password"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ssh_key_data", cred.Inputs["ssh_key_data"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ssh_public_key_data", cred.Inputs["ssh_public_key_data"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ssh_key_unlock", cred.Inputs["ssh_key_unlock"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("become_method", cred.Inputs["become_method"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("become_username", cred.Inputs["become_username"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("become_password", cred.Inputs["become_password"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("organization_id", cred.OrganizationID); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return diags
 }

@@ -112,8 +112,12 @@ func resourceSettingRead(ctx context.Context, d *schema.ResourceData, m interfac
 		)
 	}
 
-	d.Set("name", d.Id())
-	d.Set("value", d.Get("value").(string))
+	if err := d.Set("name", d.Id()); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("value", d.Get("value").(string)); err != nil {
+		return diag.FromErr(err)
+	}
 	return diags
 }
 

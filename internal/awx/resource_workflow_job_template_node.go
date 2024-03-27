@@ -274,9 +274,6 @@ func setWorkflowJobTemplateNodeResourceData(d *schema.ResourceData, r *awx.Workf
 	if err := d.Set("verbosity", r.Verbosity); err != nil {
 		return d
 	}
-	//d.Set("failure_nodes", r.FailureNodes)
-	//d.Set("success_nodes", r.SuccessNodes)
-	//d.Set("always_nodes", r.AlwaysNodes)
 
 	if err := d.Set("workflow_job_template_id", strconv.Itoa(r.WorkflowJobTemplate)); err != nil {
 		return d

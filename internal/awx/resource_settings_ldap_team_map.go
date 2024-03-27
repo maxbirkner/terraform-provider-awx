@@ -236,10 +236,18 @@ func resourceSettingsLDAPTeamMapRead(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	d.Set("name", d.Id())
-	d.Set("users", users)
-	d.Set("organization", mapdef.Organization)
-	d.Set("remove", mapdef.Remove)
+	if err := d.Set("name", d.Id()); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("users", users); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("organization", mapdef.Organization); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("remove", mapdef.Remove); err != nil {
+		return diag.FromErr(err)
+	}
 	return diags
 }
 

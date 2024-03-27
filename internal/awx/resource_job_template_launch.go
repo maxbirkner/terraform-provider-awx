@@ -113,7 +113,14 @@ func resourceJobTemplateLaunchCreate(ctx context.Context, d *schema.ResourceData
 
 	var iData map[string]interface{}
 	idata, _ := json.Marshal(data)
-	json.Unmarshal(idata, &iData)
+	if err := json.Unmarshal(idata, &iData); err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to create JobTemplate",
+			Detail:   fmt.Sprintf("JobTemplateLaunch with template ID %d, failed to create %s", d.Get("job_template_id").(int), err.Error()),
+		})
+		return diags
+	}
 
 	res, err := awxService.Launch(jobTemplateID, iData, map[string]string{})
 	if err != nil {

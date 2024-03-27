@@ -106,10 +106,18 @@ func resourceCredentialRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diags
 	}
 
-	d.Set("name", cred.Name)
-	d.Set("description", cred.Description)
-	d.Set("organization_id", cred.OrganizationID)
-	d.Set("inputs", cred.Inputs)
+	if err := d.Set("name", cred.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", cred.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("organization_id", cred.OrganizationID); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("inputs", cred.Inputs); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return diags
 }

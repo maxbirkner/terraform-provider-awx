@@ -134,7 +134,7 @@ func CredentialTypeServiceDeleteByID(ctx context.Context, d *schema.ResourceData
 }
 
 func normalizeJsonYaml(s interface{}) string {
-	result := string("")
+	result := ""
 	if j, ok := normalizeJsonOk(s); ok {
 		result = j
 	} else if y, ok := normalizeYamlOk(s); ok {

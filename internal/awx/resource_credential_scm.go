@@ -109,13 +109,27 @@ func resourceCredentialSCMRead(ctx context.Context, d *schema.ResourceData, m in
 		return diags
 	}
 
-	d.Set("name", cred.Name)
-	d.Set("description", cred.Description)
-	d.Set("username", cred.Inputs["username"])
-	d.Set("password", cred.Inputs["password"])
-	d.Set("ssh_key_data", cred.Inputs["ssh_key_data"])
-	d.Set("ssh_key_unlock", cred.Inputs["ssh_key_unlock"])
-	d.Set("organization_id", cred.OrganizationID)
+	if err := d.Set("name", cred.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", cred.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("username", cred.Inputs["username"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("password", cred.Inputs["password"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ssh_key_data", cred.Inputs["ssh_key_data"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ssh_key_unlock", cred.Inputs["ssh_key_unlock"]); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("organization_id", cred.OrganizationID); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return diags
 }
