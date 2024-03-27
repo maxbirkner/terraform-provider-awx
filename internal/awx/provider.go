@@ -10,7 +10,7 @@ import (
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
 )
 
-func Provider() *schema.Provider {
+func Provider() *schema.Provider { //nolint:funlen
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"hostname": {

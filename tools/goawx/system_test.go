@@ -1,9 +1,11 @@
-package awx
+package awx_test
 
 import (
 	"log"
 	"os"
 	"testing"
+
+	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
 )
 
 type TestRow struct {
@@ -16,7 +18,7 @@ var (
 	awxUsername string
 	awxPassword string
 
-	awxClient *AWX
+	awxClient *awx.AWX
 
 	credentialsServiceTestTable = []*TestRow{{
 		data: map[string]interface{}{
@@ -51,7 +53,7 @@ func TestMain(m *testing.M) {
 		log.Fatal("no AWX password provided")
 	}
 
-	awxClient, err = NewAWX(awxHostname, awxUsername, awxPassword, nil)
+	awxClient, err = awx.NewAWX(awxHostname, awxUsername, awxPassword, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -60,7 +62,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestCredentialsService(t *testing.T) {
-	var createResponse *Credential
+	var createResponse *awx.Credential
 
 	for _, tt := range credentialsServiceTestTable {
 		t.Run("Create", func(t *testing.T) {
