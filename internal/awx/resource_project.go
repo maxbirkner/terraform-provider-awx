@@ -283,11 +283,8 @@ func setProjectResourceData(d *schema.ResourceData, r *awx.Project) *schema.Reso
 	if err := d.Set("organization_id", r.Organization); err != nil {
 		fmt.Println("Error setting organization_id", err)
 	}
-
-	if id, err := strconv.Atoi(r.Credential); err == nil {
-		if err := d.Set("scm_credential_id", id); err != nil {
-			fmt.Println("Error setting scm_credential_id", err)
-		}
+	if err := d.Set("scm_credential_id", r.Credential); err != nil {
+		fmt.Println("Error setting scm_credential_id", err)
 	}
 	if err := d.Set("scm_update_on_launch", r.ScmUpdateOnLaunch); err != nil {
 		fmt.Println("Error setting scm_update_on_launch", err)

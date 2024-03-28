@@ -19,6 +19,7 @@ import (
 
 func main() {
 	plugin.Serve(&plugin.ServeOpts{
+		ProviderAddr: "registry.terraform.io/josh-silvas/awx",
 		ProviderFunc: func() *schema.Provider {
 			return awx.Provider()
 		},

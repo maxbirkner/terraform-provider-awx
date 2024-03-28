@@ -240,7 +240,7 @@ type Project struct {
 	ScmBranch             string    `json:"scm_branch"`
 	ScmClean              bool      `json:"scm_clean"`
 	ScmDeleteOnUpdate     bool      `json:"scm_delete_on_update"`
-	Credential            string    `json:"credential"`
+	Credential            int       `json:"credential"`
 	Timeout               int       `json:"timeout"`
 	LastJobRun            time.Time `json:"last_job_run"`
 	LastJobFailed         bool      `json:"last_job_failed"`
