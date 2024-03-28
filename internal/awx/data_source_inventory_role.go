@@ -22,10 +22,11 @@ func dataSourceInventoryRole() *schema.Resource {
 				Description: "The ID of the inventory role",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The name of the inventory role",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the inventory role",
+				ExactlyOneOf: []string{"id", "name"},
 			},
 			"inventory_id": {
 				Type:        schema.TypeInt,

@@ -22,10 +22,11 @@ func dataSourceCredentialMachineRole() *schema.Resource {
 				Description: "The ID of the credential role",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The name of the credential role",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the credential role",
+				ExactlyOneOf: []string{"id", "name"},
 			},
 			"credential_id": {
 				Type:        schema.TypeInt,
@@ -60,7 +61,7 @@ func dataSourceCredentialMachineRoleRead(ctx context.Context, d *schema.Resource
 		credentialID.SummaryFields.ObjectRoles.ExecuteRole,
 	}
 
-	if roleID, okID := d.GetOk("id"); okID {
+	if roleID, ok := d.GetOk("id"); ok {
 		id := roleID.(int)
 		for _, v := range rolesList {
 			if v != nil && id == v.ID {
@@ -70,7 +71,7 @@ func dataSourceCredentialMachineRoleRead(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	if roleName, okName := d.GetOk("name"); okName {
+	if roleName, ok := d.GetOk("name"); ok {
 		name := roleName.(string)
 
 		for _, v := range rolesList {

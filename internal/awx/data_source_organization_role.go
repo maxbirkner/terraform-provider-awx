@@ -22,10 +22,11 @@ func dataSourceOrganizationRole() *schema.Resource {
 				Description: "The ID of the organization role",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The name of the organization role",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the organization role",
+				ExactlyOneOf: []string{"id", "name"},
 			},
 			"organization_id": {
 				Type:        schema.TypeInt,

@@ -22,10 +22,11 @@ func dataSourceProjectRole() *schema.Resource {
 				Description: "The unique identifier of the project role.",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The name of the project role.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the project role.",
+				ExactlyOneOf: []string{"id", "name"},
 			},
 			"project_id": {
 				Type:        schema.TypeInt,

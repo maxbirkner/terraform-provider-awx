@@ -22,10 +22,11 @@ func dataSourceJobTemplateRole() *schema.Resource {
 				Description: "The ID of the role",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The name of the role",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the role",
+				ExactlyOneOf: []string{"id", "name"},
 			},
 			"job_template_id": {
 				Type:        schema.TypeInt,
