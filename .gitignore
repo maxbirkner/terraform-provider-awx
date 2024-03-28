@@ -42,3 +42,5 @@ terraform
 
 develop/.env
 develop/terraform-provider-*
+
+test.go

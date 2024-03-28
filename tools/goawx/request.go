@@ -107,14 +107,14 @@ func (r *Requester) Do(ar *APIRequest, responseStruct interface{}, options ...in
 
 	response, err := r.Client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Do.Request: %v", err)
 	}
 
 	//nolint:gomnd
 	if response.StatusCode == 400 { // Bad Request
 		var errorString string
 
-		errorList := map[string][]string{}
+		errorList := map[string]interface{}{}
 		if err := json.NewDecoder(response.Body).Decode(&errorList); err != nil {
 			return response, err
 		}
@@ -125,6 +125,11 @@ func (r *Requester) Do(ar *APIRequest, responseStruct interface{}, options ...in
 		}
 
 		return response, errors.New(errorString)
+	}
+
+	// If there is no response body, or if the response is of type `No Content` bypass the decode process.
+	if responseStruct == nil || response.StatusCode == 204 { //nolint:gomnd
+		return response, nil
 	}
 
 	switch responseStruct.(type) {

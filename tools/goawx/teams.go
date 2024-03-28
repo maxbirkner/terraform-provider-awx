@@ -318,12 +318,12 @@ func (t *TeamService) UpdateTeam(id int, data map[string]interface{}, params map
 }
 
 // UpdateTeamRoleEntitlement updates the role entitlements for a team.
-func (t *TeamService) UpdateTeamRoleEntitlement(id int, data map[string]interface{}, params map[string]string) (interface{}, error) {
+func (t *TeamService) UpdateTeamRoleEntitlement(id int, data map[string]interface{}, _ map[string]string) (interface{}, error) {
 	result := new(interface{})
 	endpoint := fmt.Sprintf("%s%d/roles/", teamsAPIEndpoint, id)
 	payload, err := json.Marshal(data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("UpdateTeamRoleEntitlement:json.Marshal error in payload. %s", err)
 	}
 
 	resp, err := t.client.Requester.PostJSON(endpoint, bytes.NewReader(payload), result, nil)
@@ -335,7 +335,7 @@ func (t *TeamService) UpdateTeamRoleEntitlement(id int, data map[string]interfac
 		}()
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("UpdateTeamRoleEntitlement:Requester.PostJSON error. %s", err)
 	}
 
 	if err := CheckResponse(resp); err != nil {
