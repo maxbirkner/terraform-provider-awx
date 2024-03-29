@@ -16,16 +16,22 @@ description: |-
 terraform {
   required_providers {
     awx = {
-      source  = "github.com/josh-silvas/awx"
-      version = "0.1"
+      source  = "josh-silvas/awx"
+      version = "1.0.5"
     }
   }
 }
 
-provider "awx" {
+// Example configuration for the AWX provider using a username and password
+provider "awx_with_username_password" {
   hostname = "https://awx.example.com"
   username = "admin"
   password = "password"
+}
+
+// Example configuration for the AWX provider using a token
+provider "awx_with_token" {
+  hostname = "https://awx.example.com"
   token    = "token"
 }
 ```
