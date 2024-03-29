@@ -24,8 +24,18 @@ Resource `awx_notification_template` manages notification templates within an AW
 ### Optional
 
 - `description` (String) The description of the notification template.
-- `notification_configuration` (String) The configuration of the notification template.
+- `messages` (Block Set) The description of the notification template. Options are `started`, `success`, `error`. (see [below for nested schema](#nestedblock--messages))
+- `notification_configuration` (Map of String) Build custom message responses for the notification template.
 
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+
+<a id="nestedblock--messages"></a>
+### Nested Schema for `messages`
+
+Optional:
+
+- `error` (Map of String) The message to send when the job starts.
+- `started` (Map of String) The message to send when the job starts.
+- `success` (Map of String) The message to send when the job starts.
