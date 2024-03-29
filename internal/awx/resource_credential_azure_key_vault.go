@@ -10,8 +10,6 @@ import (
 	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
-const diagElementCredentialAzureKeyVaultTitle = "Azure Key Vault Credential"
-
 func resourceCredentialAzureKeyVault() *schema.Resource {
 	return &schema.Resource{
 		Description:   "The `awx_credential_azure_key_vault` resource allows you to manage Azure Key Vault credentials in Ansible AWX.",
@@ -77,7 +75,7 @@ func resourceCredentialAzureKeyVaultCreate(ctx context.Context, d *schema.Resour
 	client := m.(*awx.AWX)
 	cred, err := client.CredentialsService.CreateCredentials(payload, map[string]string{})
 	if err != nil {
-		return utils.DiagCreate(diagElementCredentialAzureKeyVaultTitle, err)
+		return utils.DiagCreate("Azure Key Vault Credential", err)
 	}
 
 	d.SetId(strconv.Itoa(cred.ID))
@@ -90,11 +88,11 @@ func resourceCredentialAzureKeyVaultRead(_ context.Context, d *schema.ResourceDa
 	client := m.(*awx.AWX)
 	id, err := strconv.Atoi(d.Id())
 	if err != nil {
-		return utils.DiagFetch(diagElementCredentialAzureKeyVaultTitle, d.Id(), err)
+		return utils.DiagFetch("Azure Key Vault Credential", d.Id(), err)
 	}
 	cred, err := client.CredentialsService.GetCredentialsByID(id, map[string]string{})
 	if err != nil {
-		return utils.DiagFetch(diagElementCredentialAzureKeyVaultTitle, d.Id(), err)
+		return utils.DiagFetch("Azure Key Vault Credential", d.Id(), err)
 	}
 
 	if err := d.Set("name", cred.Name); err != nil {
@@ -135,7 +133,7 @@ func resourceCredentialAzureKeyVaultUpdate(ctx context.Context, d *schema.Resour
 	if d.HasChanges(keys...) {
 		id, err := strconv.Atoi(d.Id())
 		if err != nil {
-			return utils.DiagUpdate(diagElementCredentialAzureKeyVaultTitle, d.Id(), err)
+			return utils.DiagUpdate("Azure Key Vault Credential", d.Id(), err)
 		}
 		payload := map[string]interface{}{
 			"name":            d.Get("name").(string),
@@ -151,7 +149,7 @@ func resourceCredentialAzureKeyVaultUpdate(ctx context.Context, d *schema.Resour
 		}
 		client := m.(*awx.AWX)
 		if _, err = client.CredentialsService.UpdateCredentialsByID(id, payload, map[string]string{}); err != nil {
-			return utils.DiagUpdate(diagElementCredentialAzureKeyVaultTitle, d.Id(), err)
+			return utils.DiagUpdate("Azure Key Vault Credential", d.Id(), err)
 		}
 	}
 

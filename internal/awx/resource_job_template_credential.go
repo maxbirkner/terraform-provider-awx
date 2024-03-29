@@ -10,8 +10,6 @@ import (
 	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
-const diagJobTemplateCredentialTitle = "JobTemplate Credential"
-
 func resourceJobTemplateCredentials() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Associates a credential to a job template",
@@ -41,7 +39,7 @@ func resourceJobTemplateCredentialsCreate(_ context.Context, d *schema.ResourceD
 	client := m.(*awx.AWX)
 	jobTemplateID := d.Get("job_template_id").(int)
 	if _, err := client.JobTemplateService.GetJobTemplateByID(jobTemplateID, make(map[string]string)); err != nil {
-		return utils.DiagNotFound(diagJobTemplateCredentialTitle, jobTemplateID, err)
+		return utils.DiagNotFound("JobTemplate Credential", jobTemplateID, err)
 	}
 
 	result, err := client.JobTemplateService.AssociateCredentials(jobTemplateID, map[string]interface{}{
@@ -65,7 +63,7 @@ func resourceJobTemplateCredentialsDelete(_ context.Context, d *schema.ResourceD
 	jobTemplateID := d.Get("job_template_id").(int)
 	res, err := client.JobTemplateService.GetJobTemplateByID(jobTemplateID, make(map[string]string))
 	if err != nil {
-		return utils.DiagNotFound(diagJobTemplateCredentialTitle, jobTemplateID, err)
+		return utils.DiagNotFound("JobTemplate Credential", jobTemplateID, err)
 	}
 
 	if _, err = client.JobTemplateService.DisAssociateCredentials(res.ID, map[string]interface{}{

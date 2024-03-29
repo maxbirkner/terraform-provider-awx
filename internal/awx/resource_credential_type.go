@@ -11,8 +11,6 @@ import (
 	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
-const diagCredentialTypeTitle = "Credential Type"
-
 func resourceCredentialType() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Resource `awx_credential_type` manages credential types within an AWX instance.",
@@ -55,13 +53,13 @@ func resourceCredentialTypeCreate(ctx context.Context, d *schema.ResourceData, m
 	inputs := d.Get("inputs").(string)
 	inputsMap := make(map[string]interface{})
 	if err := json.Unmarshal([]byte(inputs), &inputsMap); err != nil {
-		return utils.DiagCreate(diagCredentialTypeTitle, err)
+		return utils.DiagCreate("Credential Type", err)
 	}
 
 	injectors := d.Get("injectors").(string)
 	injectorsMap := make(map[string]interface{})
 	if err := json.Unmarshal([]byte(injectors), &injectorsMap); err != nil {
-		return utils.DiagCreate(diagCredentialTypeTitle, err)
+		return utils.DiagCreate("Credential Type", err)
 	}
 
 	newCredentialType := map[string]interface{}{
@@ -75,7 +73,7 @@ func resourceCredentialTypeCreate(ctx context.Context, d *schema.ResourceData, m
 	client := m.(*awx.AWX)
 	credType, err := client.CredentialTypeService.CreateCredentialType(newCredentialType, map[string]string{})
 	if err != nil {
-		return utils.DiagCreate(diagCredentialTypeTitle, err)
+		return utils.DiagCreate("Credential Type", err)
 	}
 
 	d.SetId(strconv.Itoa(credType.ID))
@@ -88,11 +86,11 @@ func resourceCredentialTypeRead(_ context.Context, d *schema.ResourceData, m int
 	client := m.(*awx.AWX)
 	id, err := strconv.Atoi(d.Id())
 	if err != nil {
-		return utils.DiagFetch(diagCredentialTypeTitle, id, err)
+		return utils.DiagFetch("Credential Type", id, err)
 	}
 	credType, err := client.CredentialTypeService.GetCredentialTypeByID(id, map[string]string{})
 	if err != nil {
-		return utils.DiagFetch(diagCredentialTypeTitle, id, err)
+		return utils.DiagFetch("Credential Type", id, err)
 	}
 
 	if err := d.Set("name", credType.Name); err != nil {
@@ -127,18 +125,18 @@ func resourceCredentialTypeUpdate(ctx context.Context, d *schema.ResourceData, m
 		inputs := d.Get("inputs").(string)
 		inputsMap := make(map[string]interface{})
 		if err := json.Unmarshal([]byte(inputs), &inputsMap); err != nil {
-			return utils.DiagUpdate(diagCredentialTypeTitle, d.Id(), err)
+			return utils.DiagUpdate("Credential Type", d.Id(), err)
 		}
 
 		injectors := d.Get("injectors").(string)
 		injectorsMap := make(map[string]interface{})
 		if err := json.Unmarshal([]byte(injectors), &injectorsMap); err != nil {
-			return utils.DiagUpdate(diagCredentialTypeTitle, d.Id(), err)
+			return utils.DiagUpdate("Credential Type", d.Id(), err)
 		}
 
 		id, err := strconv.Atoi(d.Id())
 		if err != nil {
-			return utils.DiagUpdate(diagCredentialTypeTitle, id, err)
+			return utils.DiagUpdate("Credential Type", id, err)
 		}
 		payload := map[string]interface{}{
 			"name":        d.Get("name").(string),
@@ -150,7 +148,7 @@ func resourceCredentialTypeUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		client := m.(*awx.AWX)
 		if _, err = client.CredentialTypeService.UpdateCredentialTypeByID(id, payload, map[string]string{}); err != nil {
-			return utils.DiagUpdate(diagCredentialTypeTitle, id, err)
+			return utils.DiagUpdate("Credential Type", id, err)
 		}
 	}
 
@@ -160,11 +158,11 @@ func resourceCredentialTypeUpdate(ctx context.Context, d *schema.ResourceData, m
 func resourceCredentialTypeDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	id, err := strconv.Atoi(d.Id())
 	if err != nil {
-		return utils.DiagDelete(diagCredentialTypeTitle, id, err)
+		return utils.DiagDelete("Credential Type", id, err)
 	}
 	client := m.(*awx.AWX)
 	if err := client.CredentialTypeService.DeleteCredentialTypeByID(id, map[string]string{}); err != nil {
-		return utils.DiagDelete(diagCredentialTypeTitle, id, err)
+		return utils.DiagDelete("Credential Type", id, err)
 	}
 	return diag.Diagnostics{}
 }

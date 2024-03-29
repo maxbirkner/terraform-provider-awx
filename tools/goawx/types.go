@@ -914,6 +914,7 @@ type NotificationTemplate struct {
 	Organization              int                    `json:"organization"`
 	NotificationType          string                 `json:"notification_type"`
 	NotificationConfiguration map[string]interface{} `json:"notification_configuration"`
+	Messages                  interface{}            `json:"messages"`
 }
 
 // ExecutionEnvironment represents the awx api execution environment summary fields.
