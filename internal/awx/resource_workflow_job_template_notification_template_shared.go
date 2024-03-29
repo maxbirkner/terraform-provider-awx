@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
 func getResourceWorkflowJobTemplateNotificationTemplateAssociateFuncForType(client *awx.WorkflowJobTemplateNotificationTemplatesService, typ string) func(workflowJobTemplateID int, notificationTemplateID int) (*awx.NotificationTemplate, error) {
@@ -35,61 +36,65 @@ func getResourceWorkflowJobTemplateNotificationTemplateDisassociateFuncForType(c
 
 func resourceWorkflowJobTemplateNotificationTemplateCreateForType(typ string) func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		var diags diag.Diagnostics
 		client := m.(*awx.AWX)
-		awxWorkflowJobTemplateService := client.WorkflowJobTemplateService
-		workflowJobTemplateID := d.Get("workflow_job_template_id").(int)
-		_, err := awxWorkflowJobTemplateService.GetWorkflowJobTemplateByID(workflowJobTemplateID, make(map[string]string))
-		if err != nil {
-			return buildDiagNotFoundFail("workflow job template", workflowJobTemplateID, err)
+		wjtID := d.Get("workflow_job_template_id").(int)
+		if _, err := client.WorkflowJobTemplateService.GetWorkflowJobTemplateByID(wjtID, make(map[string]string)); err != nil {
+			return utils.DiagNotFound("Workflow Job Template", wjtID, err)
 		}
 
-		awxWorkflowJobTemplateNotifService := client.WorkflowJobTemplateNotificationTemplatesService
-		notificationTemplateID := d.Get("notification_template_id").(int)
-		associationFunc := getResourceWorkflowJobTemplateNotificationTemplateAssociateFuncForType(awxWorkflowJobTemplateNotifService, typ)
+		ntID := d.Get("notification_template_id").(int)
+		associationFunc := getResourceWorkflowJobTemplateNotificationTemplateAssociateFuncForType(client.WorkflowJobTemplateNotificationTemplatesService, typ)
 		if associationFunc == nil {
-			return buildDiagnosticsMessage("Create: WorkflowJobTemplate not AssociateWorkflowJobTemplateNotificationTemplates", "Fail to find association function for notification_template type %s", typ)
+			return utils.Diagf(
+				"Create: WorkflowJobTemplate not AssociateWorkflowJobTemplateNotificationTemplates",
+				"Fail to find association function for notification_template type %s", typ,
+			)
 		}
 
-		result, err := associationFunc(workflowJobTemplateID, notificationTemplateID)
+		result, err := associationFunc(wjtID, ntID)
 		if err != nil {
-			return buildDiagnosticsMessage("Create: WorkflowJobTemplate not AssociateWorkflowJobTemplateNotificationTemplates", "Fail to associate notification_template credentials with ID %v, for workflow_job_template ID %v, got error: %s", notificationTemplateID, workflowJobTemplateID, err.Error())
+			return utils.Diagf(
+				"Create: WorkflowJobTemplate not AssociateWorkflowJobTemplateNotificationTemplates",
+				"Fail to associate notification_template credentials with ID %v, for workflow_job_template ID %v, got error: %s",
+				ntID, wjtID, err,
+			)
 		}
 
 		d.SetId(strconv.Itoa(result.ID))
-		return diags
+		return nil
 	}
 }
 
-func resourceWorkflowJobTemplateNotificationTemplateRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	return diags
+func resourceWorkflowJobTemplateNotificationTemplateRead(_ context.Context, _ *schema.ResourceData, _ interface{}) diag.Diagnostics {
+	return nil
 }
 
 func resourceWorkflowJobTemplateNotificationTemplateDeleteForType(typ string) func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-		var diags diag.Diagnostics
 		client := m.(*awx.AWX)
-		awxWorkflowJobTemplateService := client.WorkflowJobTemplateService
-		workflowJobTemplateID := d.Get("workflow_job_template_id").(int)
-		_, err := awxWorkflowJobTemplateService.GetWorkflowJobTemplateByID(workflowJobTemplateID, make(map[string]string))
-		if err != nil {
-			return buildDiagNotFoundFail("workflow job template", workflowJobTemplateID, err)
+		wjtID := d.Get("workflow_job_template_id").(int)
+		if _, err := client.WorkflowJobTemplateService.GetWorkflowJobTemplateByID(wjtID, make(map[string]string)); err != nil {
+			return utils.DiagNotFound("workflow job template", wjtID, err)
 		}
 
-		awxWorkflowJobTemplateNotifService := client.WorkflowJobTemplateNotificationTemplatesService
-		notificationTemplateID := d.Get("notification_template_id").(int)
-		disassociationFunc := getResourceWorkflowJobTemplateNotificationTemplateDisassociateFuncForType(awxWorkflowJobTemplateNotifService, typ)
+		ntID := d.Get("notification_template_id").(int)
+		disassociationFunc := getResourceWorkflowJobTemplateNotificationTemplateDisassociateFuncForType(client.WorkflowJobTemplateNotificationTemplatesService, typ)
 		if disassociationFunc == nil {
-			return buildDiagnosticsMessage("Create: WorkflowJobTemplate not DisassociateWorkflowJobTemplateNotificationTemplates", "Fail to find disassociation function for notification_template type %s", typ)
+			return utils.Diagf(
+				"Create: WorkflowJobTemplate not DisassociateWorkflowJobTemplateNotificationTemplates",
+				"Fail to find disassociation function for notification_template type %s", typ,
+			)
 		}
 
-		_, err = disassociationFunc(workflowJobTemplateID, notificationTemplateID)
-		if err != nil {
-			return buildDiagnosticsMessage("Create: WorkflowJobTemplate not DisassociateWorkflowJobTemplateNotificationTemplates", "Fail to associate notification_template credentials with ID %v, for job_template ID %v, got error: %s", notificationTemplateID, workflowJobTemplateID, err.Error())
+		if _, err := disassociationFunc(wjtID, ntID); err != nil {
+			return utils.Diagf(
+				"Create: WorkflowJobTemplate not DisassociateWorkflowJobTemplateNotificationTemplates",
+				"Fail to associate notification_template credentials with ID %v, for job_template ID %v, got error: %s",
+				ntID, wjtID, err,
+			)
 		}
 
 		d.SetId("")
-		return diags
+		return nil
 	}
 }

@@ -3,13 +3,15 @@ package awx
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagCredentialTypeTitle = "Credential Type"
 
 func resourceCredentialType() *schema.Resource {
 	return &schema.Resource{
@@ -17,7 +19,7 @@ func resourceCredentialType() *schema.Resource {
 		CreateContext: resourceCredentialTypeCreate,
 		ReadContext:   resourceCredentialTypeRead,
 		UpdateContext: resourceCredentialTypeUpdate,
-		DeleteContext: CredentialTypeServiceDeleteByID,
+		DeleteContext: resourceCredentialTypeDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -50,97 +52,69 @@ func resourceCredentialType() *schema.Resource {
 }
 
 func resourceCredentialTypeCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	var err error
-
 	inputs := d.Get("inputs").(string)
-	inputs_map := make(map[string]interface{})
-	inputs_jsonerr := json.Unmarshal([]byte(inputs), &inputs_map)
-
-	if inputs_jsonerr != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create new Credential Type",
-			Detail:   fmt.Sprintf("Unable to create new credential type: %s", inputs_jsonerr.Error()),
-		})
-		return diags
+	inputsMap := make(map[string]interface{})
+	if err := json.Unmarshal([]byte(inputs), &inputsMap); err != nil {
+		return utils.DiagCreate(diagCredentialTypeTitle, err)
 	}
 
 	injectors := d.Get("injectors").(string)
-	injectors_map := make(map[string]interface{})
-	injectors_jsonerr := json.Unmarshal([]byte(injectors), &injectors_map)
-
-	if injectors_jsonerr != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create new Credential Type",
-			Detail:   fmt.Sprintf("Unable to create new credential type: %s", injectors_jsonerr.Error()),
-		})
-		return diags
+	injectorsMap := make(map[string]interface{})
+	if err := json.Unmarshal([]byte(injectors), &injectorsMap); err != nil {
+		return utils.DiagCreate(diagCredentialTypeTitle, err)
 	}
 
 	newCredentialType := map[string]interface{}{
 		"name":        d.Get("name").(string),
 		"description": d.Get("description").(string),
 		"kind":        d.Get("kind").(string),
-		"inputs":      inputs_map,
-		"injectors":   injectors_map,
+		"inputs":      inputsMap,
+		"injectors":   injectorsMap,
 	}
 
 	client := m.(*awx.AWX)
-	credtype, err := client.CredentialTypeService.CreateCredentialType(newCredentialType, map[string]string{})
+	credType, err := client.CredentialTypeService.CreateCredentialType(newCredentialType, map[string]string{})
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create new credential type",
-			Detail:   fmt.Sprintf("Unable to create new credential type: %s", err.Error()),
-		})
-		return diags
+		return utils.DiagCreate(diagCredentialTypeTitle, err)
 	}
 
-	d.SetId(strconv.Itoa(credtype.ID))
+	d.SetId(strconv.Itoa(credType.ID))
 	resourceCredentialTypeRead(ctx, d, m)
 
-	return diags
+	return diag.Diagnostics{}
 }
 
-func resourceCredentialTypeRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceCredentialTypeRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	id, _ := strconv.Atoi(d.Id())
-	credtype, err := client.CredentialTypeService.GetCredentialTypeByID(id, map[string]string{})
+	id, err := strconv.Atoi(d.Id())
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to fetch credential type",
-			Detail:   fmt.Sprintf("Unable to credential type with id %d: %s", id, err.Error()),
-		})
-		return diags
+		return utils.DiagFetch(diagCredentialTypeTitle, id, err)
+	}
+	credType, err := client.CredentialTypeService.GetCredentialTypeByID(id, map[string]string{})
+	if err != nil {
+		return utils.DiagFetch(diagCredentialTypeTitle, id, err)
 	}
 
-	if err := d.Set("name", credtype.Name); err != nil {
+	if err := d.Set("name", credType.Name); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("description", credtype.Description); err != nil {
+	if err := d.Set("description", credType.Description); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("kind", credtype.Kind); err != nil {
+	if err := d.Set("kind", credType.Kind); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("inputs", credtype.Inputs); err != nil {
+	if err := d.Set("inputs", credType.Inputs); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("injectors", credtype.Injectors); err != nil {
+	if err := d.Set("injectors", credType.Injectors); err != nil {
 		return diag.FromErr(err)
 	}
 
-	return diags
+	return diag.Diagnostics{}
 }
 
 func resourceCredentialTypeUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
 	keys := []string{
 		"name",
 		"description",
@@ -150,52 +124,47 @@ func resourceCredentialTypeUpdate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if d.HasChanges(keys...) {
-		var err error
-
 		inputs := d.Get("inputs").(string)
-		inputs_map := make(map[string]interface{})
-		inputs_jsonerr := json.Unmarshal([]byte(inputs), &inputs_map)
-		if inputs_jsonerr != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Unable to create new credential",
-				Detail:   fmt.Sprintf("Unable to update credential type: %s", inputs_jsonerr.Error()),
-			})
-			return diags
+		inputsMap := make(map[string]interface{})
+		if err := json.Unmarshal([]byte(inputs), &inputsMap); err != nil {
+			return utils.DiagUpdate(diagCredentialTypeTitle, d.Id(), err)
 		}
 
 		injectors := d.Get("injectors").(string)
-		injectors_map := make(map[string]interface{})
-		injectors_jsonerr := json.Unmarshal([]byte(injectors), &injectors_map)
-		if injectors_jsonerr != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Unable to create new credential",
-				Detail:   fmt.Sprintf("Unable to update credential type: %s", injectors_jsonerr.Error()),
-			})
-			return diags
+		injectorsMap := make(map[string]interface{})
+		if err := json.Unmarshal([]byte(injectors), &injectorsMap); err != nil {
+			return utils.DiagUpdate(diagCredentialTypeTitle, d.Id(), err)
 		}
 
-		id, _ := strconv.Atoi(d.Id())
-		updatedCredentialType := map[string]interface{}{
+		id, err := strconv.Atoi(d.Id())
+		if err != nil {
+			return utils.DiagUpdate(diagCredentialTypeTitle, id, err)
+		}
+		payload := map[string]interface{}{
 			"name":        d.Get("name").(string),
 			"description": d.Get("description").(string),
 			"kind":        d.Get("kind").(string),
-			"inputs":      inputs_map,
-			"injectors":   injectors_map,
+			"inputs":      inputsMap,
+			"injectors":   injectorsMap,
 		}
 
 		client := m.(*awx.AWX)
-		_, err = client.CredentialTypeService.UpdateCredentialTypeByID(id, updatedCredentialType, map[string]string{})
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Unable to update existing credential type",
-				Detail:   fmt.Sprintf("Unable to update existing credential type with id %d: %s", id, err.Error()),
-			})
-			return diags
+		if _, err = client.CredentialTypeService.UpdateCredentialTypeByID(id, payload, map[string]string{}); err != nil {
+			return utils.DiagUpdate(diagCredentialTypeTitle, id, err)
 		}
 	}
 
 	return resourceCredentialTypeRead(ctx, d, m)
+}
+
+func resourceCredentialTypeDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	id, err := strconv.Atoi(d.Id())
+	if err != nil {
+		return utils.DiagDelete(diagCredentialTypeTitle, id, err)
+	}
+	client := m.(*awx.AWX)
+	if err := client.CredentialTypeService.DeleteCredentialTypeByID(id, map[string]string{}); err != nil {
+		return utils.DiagDelete(diagCredentialTypeTitle, id, err)
+	}
+	return diag.Diagnostics{}
 }

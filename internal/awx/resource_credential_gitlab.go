@@ -16,7 +16,7 @@ func resourceCredentialGitlab() *schema.Resource {
 		CreateContext: resourceCredentialGitlabCreate,
 		ReadContext:   resourceCredentialGitlabRead,
 		UpdateContext: resourceCredentialGitlabUpdate,
-		DeleteContext: CredentialsServiceDeleteByID,
+		DeleteContext: resourceCredentialDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,

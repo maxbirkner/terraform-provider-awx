@@ -3,13 +3,15 @@ package awx
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagCredentialTitle = "Credential"
 
 func resourceCredential() *schema.Resource {
 	return &schema.Resource{
@@ -17,7 +19,7 @@ func resourceCredential() *schema.Resource {
 		CreateContext: resourceCredentialCreate,
 		ReadContext:   resourceCredentialRead,
 		UpdateContext: resourceCredentialUpdate,
-		DeleteContext: CredentialsServiceDeleteByID,
+		DeleteContext: resourceCredentialDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -50,60 +52,40 @@ func resourceCredential() *schema.Resource {
 }
 
 func resourceCredentialCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	var err error
-
 	inputs := d.Get("inputs").(string)
-	inputs_map := make(map[string]interface{})
-	jsonerr := json.Unmarshal([]byte(inputs), &inputs_map)
-
-	if jsonerr != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create new credential",
-			Detail:   fmt.Sprintf("Unable to create new credential: %s", jsonerr.Error()),
-		})
-		return diags
+	inputsMap := make(map[string]interface{})
+	if err := json.Unmarshal([]byte(inputs), &inputsMap); err != nil {
+		return utils.DiagCreate(diagCredentialTitle, err)
 	}
 
-	newCredential := map[string]interface{}{
+	payload := map[string]interface{}{
 		"name":            d.Get("name").(string),
 		"description":     d.Get("description").(string),
 		"organization":    d.Get("organization_id").(int),
 		"credential_type": d.Get("credential_type_id").(int),
-		"inputs":          inputs_map,
+		"inputs":          inputsMap,
 	}
 
 	client := m.(*awx.AWX)
-	cred, err := client.CredentialsService.CreateCredentials(newCredential, map[string]string{})
+	cred, err := client.CredentialsService.CreateCredentials(payload, map[string]string{})
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create new credential",
-			Detail:   fmt.Sprintf("Unable to create new credential: %s", err.Error()),
-		})
-		return diags
+		return utils.DiagCreate(diagCredentialTitle, err)
 	}
 
 	d.SetId(strconv.Itoa(cred.ID))
 	resourceCredentialRead(ctx, d, m)
-
-	return diags
+	return diag.Diagnostics{}
 }
 
-func resourceCredentialRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceCredentialRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	id, _ := strconv.Atoi(d.Id())
+	id, err := strconv.Atoi(d.Id())
+	if err != nil {
+		return utils.DiagFetch(diagCredentialTitle, d.Id(), err)
+	}
 	cred, err := client.CredentialsService.GetCredentialsByID(id, map[string]string{})
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to fetch credential",
-			Detail:   fmt.Sprintf("Unable to credential with id %d: %s", id, err.Error()),
-		})
-		return diags
+		return utils.DiagFetch(diagCredentialTitle, d.Id(), err)
 	}
 
 	if err := d.Set("name", cred.Name); err != nil {
@@ -119,12 +101,10 @@ func resourceCredentialRead(ctx context.Context, d *schema.ResourceData, m inter
 		return diag.FromErr(err)
 	}
 
-	return diags
+	return diag.Diagnostics{}
 }
 
 func resourceCredentialUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
 	keys := []string{
 		"name",
 		"description",
@@ -136,38 +116,41 @@ func resourceCredentialUpdate(ctx context.Context, d *schema.ResourceData, m int
 		var err error
 
 		inputs := d.Get("inputs").(string)
-		inputs_map := make(map[string]interface{})
-		jsonerr := json.Unmarshal([]byte(inputs), &inputs_map)
-
-		if jsonerr != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Unable to create new credential",
-				Detail:   fmt.Sprintf("Unable to create new credential: %s", jsonerr.Error()),
-			})
-			return diags
+		inputsMap := make(map[string]interface{})
+		if err := json.Unmarshal([]byte(inputs), &inputsMap); err != nil {
+			return utils.DiagUpdate(diagCredentialTitle, d.Id(), err)
 		}
 
-		id, _ := strconv.Atoi(d.Id())
-		updatedCredential := map[string]interface{}{
+		id, err := strconv.Atoi(d.Id())
+		if err != nil {
+			return utils.DiagUpdate(diagCredentialTitle, d.Id(), err)
+		}
+		update := map[string]interface{}{
 			"name":            d.Get("name").(string),
 			"description":     d.Get("description").(string),
 			"organization":    d.Get("organization_id").(int),
 			"credential_type": d.Get("credential_type_id"),
-			"inputs":          inputs_map,
+			"inputs":          inputsMap,
 		}
 
 		client := m.(*awx.AWX)
-		_, err = client.CredentialsService.UpdateCredentialsByID(id, updatedCredential, map[string]string{})
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Unable to update existing credentials",
-				Detail:   fmt.Sprintf("Unable to update existing credentials with id %d: %s", id, err.Error()),
-			})
-			return diags
+		if _, err = client.CredentialsService.UpdateCredentialsByID(id, update, map[string]string{}); err != nil {
+			return utils.DiagUpdate(diagCredentialTitle, d.Id(), err)
 		}
 	}
 
 	return resourceCredentialSCMRead(ctx, d, m)
+}
+
+func resourceCredentialDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	id, err := strconv.Atoi(d.Id())
+	if err != nil {
+		return utils.DiagDelete(diagCredentialTitle, d.Id(), err)
+	}
+	client := m.(*awx.AWX)
+	if err := client.CredentialsService.DeleteCredentialsByID(id, map[string]string{}); err != nil {
+		return utils.DiagDelete(diagCredentialTitle, d.Id(), err)
+	}
+
+	return diag.Diagnostics{}
 }

@@ -7,7 +7,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagInventoryGroupTitle = "Inventory Group"
 
 func dataSourceInventoryGroup() *schema.Resource {
 	return &schema.Resource{
@@ -21,10 +24,11 @@ func dataSourceInventoryGroup() *schema.Resource {
 				Description: "The unique identifier of the Inventory Group.",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The name of the Inventory Group.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the Inventory Group.",
+				ExactlyOneOf: []string{"id", "name"},
 			},
 			"inventory_id": {
 				Type:        schema.TypeInt,
@@ -47,30 +51,20 @@ func dataSourceInventoryGroupRead(ctx context.Context, d *schema.ResourceData, m
 		params["id"] = strconv.Itoa(groupID.(int))
 	}
 
-	if len(params) == 0 {
-		return buildDiagnosticsMessage(
-			"Get: Missing Parameters",
-			"Please use one of the selectors (name or id)",
-		)
-	}
 	inventoryID := d.Get("inventory_id").(int)
 	groups, _, err := client.InventoryGroupService.ListInventoryGroups(inventoryID, params)
 	if err != nil {
-		return buildDiagnosticsMessage(
-			"Get: Fail to fetch Inventory Group",
-			"Fail to find the group got: %s",
-			err.Error(),
-		)
+		return utils.DiagFetch(diagInventoryGroupTitle, params, err)
 	}
 	if len(groups) > 1 {
-		return buildDiagnosticsMessage(
+		return utils.Diagf(
 			"Get: find more than one Element",
 			"The Query Returns more than one Inventory Group, %d",
 			len(groups),
 		)
 	}
 	if len(groups) == 0 {
-		return buildDiagnosticsMessage(
+		return utils.Diagf(
 			"Get: Inventory Group does not exist",
 			"The Query Returns no Inventory Group matching filter %v",
 			params,

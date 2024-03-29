@@ -8,7 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagInventorySourceTitle = "Inventory Source"
 
 //nolint:funlen
 func resourceInventorySource() *schema.Resource {
@@ -133,9 +136,8 @@ func resourceInventorySource() *schema.Resource {
 
 func resourceInventorySourceCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.InventorySourcesService
 
-	createInventorySourceData := map[string]interface{}{
+	payload := map[string]interface{}{
 		"name":                 d.Get("name").(string),
 		"description":          d.Get("description").(string),
 		"enabled_var":          d.Get("enabled_var").(string),
@@ -157,15 +159,15 @@ func resourceInventorySourceCreate(ctx context.Context, d *schema.ResourceData, 
 		"source_path":      d.Get("source_path").(string),
 	}
 	if _, ok := d.GetOk("credential_id"); ok {
-		createInventorySourceData["credential"] = d.Get("credential_id").(int)
+		payload["credential"] = d.Get("credential_id").(int)
 	}
 	if _, ok := d.GetOk("source_project_id"); ok {
-		createInventorySourceData["source_project"] = d.Get("source_project_id").(int)
+		payload["source_project"] = d.Get("source_project_id").(int)
 	}
 
-	result, err := awxService.CreateInventorySource(createInventorySourceData, map[string]string{})
+	result, err := client.InventorySourcesService.CreateInventorySource(payload, map[string]string{})
 	if err != nil {
-		return buildDiagCreateFail(diagElementInventorySourceTitle, err)
+		return utils.DiagCreate(diagInventorySourceTitle, err)
 	}
 
 	d.SetId(strconv.Itoa(result.ID))
@@ -176,12 +178,12 @@ func resourceInventorySourceCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceInventorySourceUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
 	awxService := client.InventorySourcesService
-	id, diags := convertStateIDToNummeric(diagElementInventorySourceTitle, d)
+	id, diags := utils.StateIDToInt(diagInventorySourceTitle, d)
 	if diags.HasError() {
 		return diags
 	}
 
-	updateInventorySourceData := map[string]interface{}{
+	payload := map[string]interface{}{
 		"name":                 d.Get("name").(string),
 		"description":          d.Get("description").(string),
 		"enabled_var":          d.Get("enabled_var").(string),
@@ -203,47 +205,41 @@ func resourceInventorySourceUpdate(ctx context.Context, d *schema.ResourceData, 
 		"source_path":      d.Get("source_path").(string),
 	}
 	if _, ok := d.GetOk("credential_id"); ok {
-		updateInventorySourceData["credential"] = d.Get("credential_id").(int)
+		payload["credential"] = d.Get("credential_id").(int)
 	}
 	if _, ok := d.GetOk("source_project_id"); ok {
-		updateInventorySourceData["source_project"] = d.Get("source_project_id").(int)
+		payload["source_project"] = d.Get("source_project_id").(int)
 	}
 
-	_, err := awxService.UpdateInventorySource(id, updateInventorySourceData, nil)
-	if err != nil {
-		return buildDiagUpdateFail(diagElementInventorySourceTitle, id, err)
+	if _, err := awxService.UpdateInventorySource(id, payload, nil); err != nil {
+		return utils.DiagUpdate(diagInventorySourceTitle, id, err)
 	}
 
 	return resourceInventorySourceRead(ctx, d, m)
 }
 
-func resourceInventorySourceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceInventorySourceDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.InventorySourcesService
-	id, diags := convertStateIDToNummeric(diagElementInventorySourceTitle, d)
+	id, diags := utils.StateIDToInt(diagInventorySourceTitle, d)
 	if diags.HasError() {
 		return diags
 	}
-	if _, err := awxService.DeleteInventorySource(id); err != nil {
-		return buildDiagDeleteFail(
-			"inventroy source",
-			fmt.Sprintf("inventroy source %v, got %s ",
-				id, err.Error()))
+	if _, err := client.InventorySourcesService.DeleteInventorySource(id); err != nil {
+		return utils.DiagDelete(diagInventorySourceTitle, id, err)
 	}
 	d.SetId("")
 	return nil
 }
 
-func resourceInventorySourceRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceInventorySourceRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.InventorySourcesService
-	id, diags := convertStateIDToNummeric(diagElementInventorySourceTitle, d)
+	id, diags := utils.StateIDToInt(diagInventorySourceTitle, d)
 	if diags.HasError() {
 		return diags
 	}
-	res, err := awxService.GetInventorySourceByID(id, make(map[string]string))
+	res, err := client.InventorySourcesService.GetInventorySourceByID(id, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail(diagElementInventorySourceTitle, id, err)
+		return utils.DiagFetch(diagInventorySourceTitle, id, err)
 	}
 	d = setInventorySourceResourceData(d, res)
 	return nil
@@ -280,7 +276,7 @@ func setInventorySourceResourceData(d *schema.ResourceData, r *awx.InventorySour
 	if err := d.Set("source", r.Source); err != nil {
 		fmt.Println("Error setting source", err)
 	}
-	if err := d.Set("source_vars", normalizeJsonYaml(r.SourceVars)); err != nil {
+	if err := d.Set("source_vars", utils.Normalize(r.SourceVars)); err != nil {
 		fmt.Println("Error setting source_vars", err)
 	}
 	if err := d.Set("host_filter", r.HostFilter); err != nil {

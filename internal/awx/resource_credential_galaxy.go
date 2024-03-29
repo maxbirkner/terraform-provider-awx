@@ -16,7 +16,7 @@ func resourceCredentialGalaxy() *schema.Resource {
 		CreateContext: resourceCredentialGalaxyCreate,
 		ReadContext:   resourceCredentialGalaxyRead,
 		UpdateContext: resourceCredentialGalaxyUpdate,
-		DeleteContext: CredentialsServiceDeleteByID,
+		DeleteContext: resourceCredentialDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,

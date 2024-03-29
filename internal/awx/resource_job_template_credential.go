@@ -2,13 +2,15 @@ package awx
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagJobTemplateCredentialTitle = "JobTemplate Credential"
 
 func resourceJobTemplateCredentials() *schema.Resource {
 	return &schema.Resource{
@@ -35,50 +37,43 @@ func resourceJobTemplateCredentials() *schema.Resource {
 	}
 }
 
-func resourceJobTemplateCredentialsCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceJobTemplateCredentialsCreate(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.JobTemplateService
 	jobTemplateID := d.Get("job_template_id").(int)
-	_, err := awxService.GetJobTemplateByID(jobTemplateID, make(map[string]string))
-	if err != nil {
-		return buildDiagNotFoundFail("job template", jobTemplateID, err)
+	if _, err := client.JobTemplateService.GetJobTemplateByID(jobTemplateID, make(map[string]string)); err != nil {
+		return utils.DiagNotFound(diagJobTemplateCredentialTitle, jobTemplateID, err)
 	}
 
-	result, err := awxService.AssociateCredentials(jobTemplateID, map[string]interface{}{
+	result, err := client.JobTemplateService.AssociateCredentials(jobTemplateID, map[string]interface{}{
 		"id": d.Get("credential_id").(int),
 	}, map[string]string{})
 
 	if err != nil {
-		return buildDiagnosticsMessage("Create: JobTemplate not AssociateCredentials", "Fail to add credentials with Id %v, for Template ID %v, got error: %s", d.Get("credential_id").(int), jobTemplateID, err.Error())
+		return utils.DiagCreate("JobTemplate AssociateCredentials", err)
 	}
 
 	d.SetId(strconv.Itoa(result.ID))
-	return diags
+	return nil
 }
 
-func resourceJobTemplateCredentialsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	return diags
+func resourceJobTemplateCredentialsRead(_ context.Context, _ *schema.ResourceData, _ interface{}) diag.Diagnostics {
+	return nil
 }
 
-func resourceJobTemplateCredentialsDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceJobTemplateCredentialsDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.JobTemplateService
 	jobTemplateID := d.Get("job_template_id").(int)
-	res, err := awxService.GetJobTemplateByID(jobTemplateID, make(map[string]string))
+	res, err := client.JobTemplateService.GetJobTemplateByID(jobTemplateID, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail("job template", jobTemplateID, err)
+		return utils.DiagNotFound(diagJobTemplateCredentialTitle, jobTemplateID, err)
 	}
 
-	_, err = awxService.DisAssociateCredentials(res.ID, map[string]interface{}{
+	if _, err = client.JobTemplateService.DisAssociateCredentials(res.ID, map[string]interface{}{
 		"id": d.Get("credential_id").(int),
-	}, map[string]string{})
-	if err != nil {
-		return buildDiagDeleteFail("JobTemplate DisAssociateCredentials", fmt.Sprintf("DisAssociateCredentials %v, from JobTemplateID %v got %s ", d.Get("credential_id").(int), d.Get("job_template_id").(int), err.Error()))
+	}, map[string]string{}); err != nil {
+		return utils.DiagDelete("JobTemplate DisAssociateCredentials", jobTemplateID, err)
 	}
 
 	d.SetId("")
-	return diags
+	return nil
 }

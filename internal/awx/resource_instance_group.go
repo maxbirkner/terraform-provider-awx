@@ -8,7 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagInstanceGroupTitle = "Instance Group"
 
 func resourceInstanceGroup() *schema.Resource {
 	return &schema.Resource{
@@ -46,7 +49,7 @@ func resourceInstanceGroup() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				StateFunc:   normalizeJsonYaml,
+				StateFunc:   utils.Normalize,
 				Description: "The pod spec override for the instance group.",
 			},
 		},
@@ -69,7 +72,7 @@ func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, m 
 		"pod_spec_override":          d.Get("pod_spec_override").(string),
 	}, map[string]string{})
 	if err != nil {
-		return buildDiagCreateFail(diagElementInstanceGroupTitle, err)
+		return utils.DiagCreate(diagInstanceGroupTitle, err)
 	}
 
 	d.SetId(strconv.Itoa(result.ID))
@@ -79,62 +82,52 @@ func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, m 
 
 func resourceInstanceGroupUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.InstanceGroupsService
-	id, diags := convertStateIDToNummeric(diagElementInstanceGroupTitle, d)
+	id, diags := utils.StateIDToInt(diagInstanceGroupTitle, d)
 	if diags.HasError() {
 		return diags
 	}
 
-	_, err := awxService.UpdateInstanceGroup(id, map[string]interface{}{
+	if _, err := client.InstanceGroupsService.UpdateInstanceGroup(id, map[string]interface{}{
 		"name":                       d.Get("name").(string),
 		"policy_instance_minimum":    d.Get("policy_instance_minimum").(int),
 		"is_container_group":         d.Get("is_container_group").(bool),
 		"policy_instance_percentage": d.Get("policy_instance_percentage").(int),
 		"pod_spec_override":          d.Get("pod_spec_override").(string),
-	}, nil)
-	if err != nil {
-		return buildDiagUpdateFail(diagElementInstanceGroupTitle, id, err)
+	}, nil); err != nil {
+		return utils.DiagUpdate(diagInstanceGroupTitle, id, err)
 	}
 
 	return resourceInstanceGroupRead(ctx, d, m)
 
 }
 
-func resourceInstanceGroupDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceInstanceGroupDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.InstanceGroupsService
-
-	id, diags := convertStateIDToNummeric(diagElementInstanceGroupTitle, d)
+	id, diags := utils.StateIDToInt(diagInstanceGroupTitle, d)
 	if diags.HasError() {
 		return diags
 	}
 
-	if _, err := awxService.DeleteInstanceGroup(id); err != nil {
-		return buildDiagDeleteFail(
-			diagElementInstanceGroupTitle,
-			fmt.Sprintf("ID: %v, got %s ",
-				id, err.Error()))
+	if _, err := client.InstanceGroupsService.DeleteInstanceGroup(id); err != nil {
+		return utils.DiagDelete(diagInstanceGroupTitle, id, err)
 	}
 	d.SetId("")
 	return nil
 }
 
-func resourceInstanceGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceInstanceGroupRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.InstanceGroupsService
-
-	id, diags := convertStateIDToNummeric(diagElementInstanceGroupTitle, d)
+	id, diags := utils.StateIDToInt(diagInstanceGroupTitle, d)
 	if diags.HasError() {
 		return diags
 	}
 
-	res, err := awxService.GetInstanceGroupByID(id, make(map[string]string))
+	res, err := client.InstanceGroupsService.GetInstanceGroupByID(id, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail(diagElementInstanceGroupTitle, id, err)
+		return utils.DiagNotFound(diagInstanceGroupTitle, id, err)
 	}
 	d = setInstanceGroupResourceData(d, res)
-	return diags
+	return diag.Diagnostics{}
 }
 
 func setInstanceGroupResourceData(d *schema.ResourceData, r *awx.InstanceGroup) *schema.ResourceData {
@@ -144,7 +137,7 @@ func setInstanceGroupResourceData(d *schema.ResourceData, r *awx.InstanceGroup) 
 	if err := d.Set("is_container_group", r.IsContainerGroup); err != nil {
 		fmt.Println("Error setting is_container_group", err)
 	}
-	if err := d.Set("pod_spec_override", normalizeJsonYaml(r.PodSpecOverride)); err != nil {
+	if err := d.Set("pod_spec_override", utils.Normalize(r.PodSpecOverride)); err != nil {
 		fmt.Println("Error setting pod_spec_override", err)
 	}
 

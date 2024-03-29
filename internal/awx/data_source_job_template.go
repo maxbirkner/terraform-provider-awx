@@ -9,7 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagElementJobTemplate = "Job Template"
 
 func dataSourceJobTemplate() *schema.Resource {
 	return &schema.Resource{
@@ -23,10 +26,11 @@ func dataSourceJobTemplate() *schema.Resource {
 				Description: "The unique identifier of the Job Template",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The name of the Job Template",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the Job Template",
+				ExactlyOneOf: []string{"id", "name"},
 			},
 		},
 	}
@@ -44,21 +48,10 @@ func dataSourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, m in
 		params["id"] = strconv.Itoa(groupID.(int))
 	}
 
-	if len(params) == 0 {
-		return buildDiagnosticsMessage(
-			"Get: Missing Parameters",
-			"Please use one of the selectors (name or group_id)",
-		)
-	}
-
 	jobTemplate, _, err := client.JobTemplateService.ListJobTemplates(params)
 
 	if err != nil {
-		return buildDiagnosticsMessage(
-			"Get: Fail to fetch Inventory Group",
-			"Fail to find the group got: %s",
-			err.Error(),
-		)
+		return utils.DiagFetch(diagElementJobTemplate, params, err)
 	}
 
 	for _, template := range jobTemplate {
@@ -72,14 +65,14 @@ func dataSourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, m in
 	if _, okGroupID := d.GetOk("id"); okGroupID {
 		log.Printf("byid %v", len(jobTemplate))
 		if len(jobTemplate) > 1 {
-			return buildDiagnosticsMessage(
+			return utils.Diagf(
 				"Get: find more than one Element",
 				"The Query Returns more than one Group, %d",
 				len(jobTemplate),
 			)
 		}
 		if len(jobTemplate) == 0 {
-			return buildDiagnosticsMessage(
+			return utils.Diagf(
 				"Get: Job Template does not exist",
 				"The Query Returns no Job Template matching filter %v",
 				params,
@@ -88,7 +81,7 @@ func dataSourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, m in
 		d = setJobTemplateResourceData(d, jobTemplate[0])
 		return diags
 	}
-	return buildDiagnosticsMessage(
+	return utils.Diagf(
 		"Get: find more than one Element",
 		"The Query Returns more than one Group, %d",
 		len(jobTemplate),

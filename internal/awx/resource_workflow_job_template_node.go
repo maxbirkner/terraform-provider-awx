@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
 func resourceWorkflowJobTemplateNode() *schema.Resource {
@@ -25,7 +26,7 @@ func resourceWorkflowJobTemplateNode() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				StateFunc:   normalizeJsonYaml,
+				StateFunc:   utils.Normalize,
 				Description: "Extra data for the workflow job template node.",
 			},
 			"inventory_id": {
@@ -165,21 +166,18 @@ func resourceWorkflowJobTemplateNodeCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceWorkflowJobTemplateNodeUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
-	awxService := client.WorkflowJobTemplateNodeService
-	id, diags := convertStateIDToNummeric("Update WorkflowJobTemplateNode", d)
+	id, diags := utils.StateIDToInt("Update WorkflowJobTemplateNode", d)
 	if diags.HasError() {
 		return diags
 	}
 
 	params := make(map[string]string)
-	_, err := awxService.GetWorkflowJobTemplateNodeByID(id, params)
-	if err != nil {
-		return buildDiagNotFoundFail("workflow job template node", id, err)
+	if _, err := client.WorkflowJobTemplateNodeService.GetWorkflowJobTemplateNodeByID(id, params); err != nil {
+		return utils.DiagNotFound("workflow job template node", id, err)
 	}
 
-	_, err = awxService.UpdateWorkflowJobTemplateNode(id, map[string]interface{}{
+	if _, err := client.WorkflowJobTemplateNodeService.UpdateWorkflowJobTemplateNode(id, map[string]interface{}{
 		"extra_data":            d.Get("extra_data").(string),
 		"inventory":             d.Get("inventory_id").(int),
 		"scm_branch":            d.Get("scm_branch").(string),
@@ -196,50 +194,38 @@ func resourceWorkflowJobTemplateNodeUpdate(ctx context.Context, d *schema.Resour
 		//"always_nodes":              d.Get("always_nodes").([]interface{}),
 		"all_parents_must_converge": d.Get("all_parents_must_converge").(bool),
 		"identifier":                d.Get("identifier").(string),
-	}, map[string]string{})
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to update WorkflowJobTemplateNode",
-			Detail:   fmt.Sprintf("WorkflowJobTemplateNode with name %s in the project id %d failed to update %s", d.Get("name").(string), d.Get("project_id").(int), err.Error()),
-		})
-		return diags
+	}, map[string]string{}); err != nil {
+		return utils.DiagUpdate("workflow job template node", d.Get("name").(string), err)
 	}
 
 	return resourceWorkflowJobTemplateNodeRead(ctx, d, m)
 }
 
-func resourceWorkflowJobTemplateNodeRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceWorkflowJobTemplateNodeRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.WorkflowJobTemplateNodeService
-	id, diags := convertStateIDToNummeric("Read WorkflowJobTemplateNode", d)
+	id, diags := utils.StateIDToInt("Read WorkflowJobTemplateNode", d)
 	if diags.HasError() {
 		return diags
 	}
 
-	res, err := awxService.GetWorkflowJobTemplateNodeByID(id, make(map[string]string))
+	res, err := client.WorkflowJobTemplateNodeService.GetWorkflowJobTemplateNodeByID(id, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail("workflow job template node", id, err)
+		return utils.DiagNotFound("workflow job template node", id, err)
 
 	}
 	d = setWorkflowJobTemplateNodeResourceData(d, res)
 	return nil
 }
 
-func resourceWorkflowJobTemplateNodeDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceWorkflowJobTemplateNodeDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.WorkflowJobTemplateNodeService
-	id, diags := convertStateIDToNummeric(diagElementHostTitle, d)
+	id, diags := utils.StateIDToInt("Workflow Job Template Node", d)
 	if diags.HasError() {
 		return diags
 	}
 
-	if _, err := awxService.DeleteWorkflowJobTemplateNode(id); err != nil {
-		return buildDiagDeleteFail(
-			diagElementHostTitle,
-			fmt.Sprintf("id %v, got %s ",
-				id, err.Error()))
+	if _, err := client.WorkflowJobTemplateNodeService.DeleteWorkflowJobTemplateNode(id); err != nil {
+		return utils.DiagDelete("workflow job template node", id, err)
 	}
 	d.SetId("")
 	return nil
@@ -247,7 +233,7 @@ func resourceWorkflowJobTemplateNodeDelete(ctx context.Context, d *schema.Resour
 
 func setWorkflowJobTemplateNodeResourceData(d *schema.ResourceData, r *awx.WorkflowJobTemplateNode) *schema.ResourceData {
 
-	if err := d.Set("extra_data", normalizeJsonYaml(r.ExtraData)); err != nil {
+	if err := d.Set("extra_data", utils.Normalize(r.ExtraData)); err != nil {
 		fmt.Println("Error setting extra_data", err)
 	}
 	if err := d.Set("inventory_id", strconv.Itoa(r.Inventory)); err != nil {

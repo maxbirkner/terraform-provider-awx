@@ -7,7 +7,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagInventoryTitle = "Inventory"
 
 func dataSourceInventory() *schema.Resource {
 	return &schema.Resource{
@@ -21,10 +24,11 @@ func dataSourceInventory() *schema.Resource {
 				Description: "The unique identifier of the inventory.",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The name of the inventory.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the inventory.",
+				ExactlyOneOf: []string{"id", "name"},
 			},
 			"organization_id": {
 				Type:        schema.TypeInt,
@@ -36,7 +40,7 @@ func dataSourceInventory() *schema.Resource {
 	}
 }
 
-func dataSourceInventoriesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceInventoriesRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
 	params := make(map[string]string)
@@ -51,22 +55,12 @@ func dataSourceInventoriesRead(ctx context.Context, d *schema.ResourceData, m in
 	if organizationID, okIOrgID := d.GetOk("organization_id"); okIOrgID {
 		params["organization"] = strconv.Itoa(organizationID.(int))
 	}
-	if len(params) == 0 {
-		return buildDiagnosticsMessage(
-			"Get: Missing Parameters",
-			"Please use one of the selectors (name or id)",
-		)
-	}
 	inventories, _, err := client.InventoriesService.ListInventories(params)
 	if err != nil {
-		return buildDiagnosticsMessage(
-			"Get: Fail to fetch Inventory",
-			"Fail to find the inventory got: %s",
-			err.Error(),
-		)
+		return utils.DiagFetch(diagInventoryTitle, params, err)
 	}
 	if len(inventories) > 1 {
-		return buildDiagnosticsMessage(
+		return utils.Diagf(
 			"Get: find more than one Element",
 			"The Query Returns more than one Inventory, %d",
 			len(inventories),
@@ -74,7 +68,7 @@ func dataSourceInventoriesRead(ctx context.Context, d *schema.ResourceData, m in
 	}
 
 	if len(inventories) == 0 {
-		return buildDiagnosticsMessage(
+		return utils.Diagf(
 			"Get: Inventory does not exist",
 			"The Query Returns no Inventory matching filter %v",
 			params,

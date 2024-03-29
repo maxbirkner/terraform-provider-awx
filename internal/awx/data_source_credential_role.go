@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
 func dataSourceCredentialMachineRole() *schema.Resource {
@@ -45,11 +46,7 @@ func dataSourceCredentialMachineRoleRead(ctx context.Context, d *schema.Resource
 	credID := d.Get("credential_id").(int)
 	credentialID, err := client.CredentialsService.GetCredentialsByID(credID, params)
 	if err != nil {
-		return buildDiagnosticsMessage(
-			"Get: Fail to fetch Credential",
-			"Fail to find the credential, got: %s",
-			err.Error(),
-		)
+		return utils.DiagFetch("Machine Credential Role", credID, err)
 	}
 
 	rolesList := []*awx.ApplyRole{
@@ -82,10 +79,7 @@ func dataSourceCredentialMachineRoleRead(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	return buildDiagnosticsMessage(
-		"Failed to fetch machine credential role - Not Found",
-		"The credential role was not found",
-	)
+	return utils.DiagNotFound("Machine Credential Role", credID, nil)
 }
 
 func setCredentialRoleData(d *schema.ResourceData, r *awx.ApplyRole) *schema.ResourceData {

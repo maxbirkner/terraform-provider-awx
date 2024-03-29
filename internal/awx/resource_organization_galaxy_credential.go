@@ -2,13 +2,15 @@ package awx
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagOrganizationGalaxyCredentialTitle = "Organization Galaxy Credential"
 
 func resourceOrganizationsGalaxyCredentials() *schema.Resource {
 	return &schema.Resource{
@@ -35,50 +37,43 @@ func resourceOrganizationsGalaxyCredentials() *schema.Resource {
 	}
 }
 
-func resourceOrganizationsGalaxyCredentialsCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceOrganizationsGalaxyCredentialsCreate(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.OrganizationsService
-	OrganizationID := d.Get("organization_id").(int)
-	_, err := awxService.GetOrganizationsByID(OrganizationID, make(map[string]string))
-	if err != nil {
-		return buildDiagNotFoundFail("organization", OrganizationID, err)
+	orgID := d.Get("organization_id").(int)
+	if _, err := client.OrganizationsService.GetOrganizationsByID(orgID, make(map[string]string)); err != nil {
+		return utils.DiagNotFound(diagOrganizationGalaxyCredentialTitle, orgID, err)
 	}
 
-	result, err := awxService.AssociateGalaxyCredentials(OrganizationID, map[string]interface{}{
+	result, err := client.OrganizationsService.AssociateGalaxyCredentials(orgID, map[string]interface{}{
 		"id": d.Get("credential_id").(int),
 	}, map[string]string{})
 
 	if err != nil {
-		return buildDiagnosticsMessage("Create: Organization not AssociateGalaxyCredentials", "Fail to add Galaxy credentials with Id %v, for Organization ID %v, got error: %s", d.Get("credential_id").(int), OrganizationID, err.Error())
+		return utils.DiagCreate(diagOrganizationGalaxyCredentialTitle, err)
 	}
 
 	d.SetId(strconv.Itoa(result.ID))
-	return diags
+	return nil
 }
 
-func resourceOrganizationsGalaxyCredentialsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	return diags
+func resourceOrganizationsGalaxyCredentialsRead(_ context.Context, _ *schema.ResourceData, _ interface{}) diag.Diagnostics {
+	return nil
 }
 
-func resourceOrganizationsGalaxyCredentialsDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceOrganizationsGalaxyCredentialsDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.OrganizationsService
-	OrganizationID := d.Get("organization_id").(int)
-	res, err := awxService.GetOrganizationsByID(OrganizationID, make(map[string]string))
+	orgID := d.Get("organization_id").(int)
+	res, err := client.OrganizationsService.GetOrganizationsByID(orgID, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail("organization", OrganizationID, err)
+		return utils.DiagNotFound(diagOrganizationGalaxyCredentialTitle, orgID, err)
 	}
 
-	_, err = awxService.DisAssociateGalaxyCredentials(res.ID, map[string]interface{}{
+	if _, err = client.OrganizationsService.DisAssociateGalaxyCredentials(res.ID, map[string]interface{}{
 		"id": d.Get("credential_id").(int),
-	}, map[string]string{})
-	if err != nil {
-		return buildDiagDeleteFail("Organization DisAssociateGalaxyCredentials", fmt.Sprintf("DisAssociateGalaxyCredentials %v, from OrganizationID %v got %s ", d.Get("credential_id").(int), d.Get("organization_id").(int), err.Error()))
+	}, map[string]string{}); err != nil {
+		return utils.DiagDelete(diagOrganizationGalaxyCredentialTitle, orgID, err)
 	}
 
 	d.SetId("")
-	return diags
+	return nil
 }

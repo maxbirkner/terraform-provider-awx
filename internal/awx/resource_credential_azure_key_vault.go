@@ -2,13 +2,15 @@ package awx
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagElementCredentialAzureKeyVaultTitle = "Azure Key Vault Credential"
 
 func resourceCredentialAzureKeyVault() *schema.Resource {
 	return &schema.Resource{
@@ -16,7 +18,7 @@ func resourceCredentialAzureKeyVault() *schema.Resource {
 		CreateContext: resourceCredentialAzureKeyVaultCreate,
 		ReadContext:   resourceCredentialAzureKeyVaultRead,
 		UpdateContext: resourceCredentialAzureKeyVaultUpdate,
-		DeleteContext: CredentialsServiceDeleteByID,
+		DeleteContext: resourceCredentialDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -59,10 +61,7 @@ func resourceCredentialAzureKeyVault() *schema.Resource {
 }
 
 func resourceCredentialAzureKeyVaultCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	var err error
-
-	newCredential := map[string]interface{}{
+	payload := map[string]interface{}{
 		"name":            d.Get("name").(string),
 		"description":     d.Get("description").(string),
 		"organization":    d.Get("organization_id").(int),
@@ -76,35 +75,26 @@ func resourceCredentialAzureKeyVaultCreate(ctx context.Context, d *schema.Resour
 	}
 
 	client := m.(*awx.AWX)
-	cred, err := client.CredentialsService.CreateCredentials(newCredential, map[string]string{})
+	cred, err := client.CredentialsService.CreateCredentials(payload, map[string]string{})
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create new credentials",
-			Detail:   fmt.Sprintf("Unable to create new credentials: %s", err.Error()),
-		})
-		return diags
+		return utils.DiagCreate(diagElementCredentialAzureKeyVaultTitle, err)
 	}
 
 	d.SetId(strconv.Itoa(cred.ID))
 	resourceCredentialAzureKeyVaultRead(ctx, d, m)
 
-	return diags
+	return diag.Diagnostics{}
 }
 
-func resourceCredentialAzureKeyVaultRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceCredentialAzureKeyVaultRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	id, _ := strconv.Atoi(d.Id())
+	id, err := strconv.Atoi(d.Id())
+	if err != nil {
+		return utils.DiagFetch(diagElementCredentialAzureKeyVaultTitle, d.Id(), err)
+	}
 	cred, err := client.CredentialsService.GetCredentialsByID(id, map[string]string{})
 	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to fetch credentials",
-			Detail:   fmt.Sprintf("Unable to credentials with id %d: %s", id, err.Error()),
-		})
-		return diags
+		return utils.DiagFetch(diagElementCredentialAzureKeyVaultTitle, d.Id(), err)
 	}
 
 	if err := d.Set("name", cred.Name); err != nil {
@@ -129,12 +119,10 @@ func resourceCredentialAzureKeyVaultRead(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	return diags
+	return diag.Diagnostics{}
 }
 
 func resourceCredentialAzureKeyVaultUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
 	keys := []string{
 		"name",
 		"description",
@@ -145,10 +133,11 @@ func resourceCredentialAzureKeyVaultUpdate(ctx context.Context, d *schema.Resour
 	}
 
 	if d.HasChanges(keys...) {
-		var err error
-
-		id, _ := strconv.Atoi(d.Id())
-		updatedCredential := map[string]interface{}{
+		id, err := strconv.Atoi(d.Id())
+		if err != nil {
+			return utils.DiagUpdate(diagElementCredentialAzureKeyVaultTitle, d.Id(), err)
+		}
+		payload := map[string]interface{}{
 			"name":            d.Get("name").(string),
 			"description":     d.Get("description").(string),
 			"organization":    d.Get("organization_id").(int),
@@ -160,16 +149,9 @@ func resourceCredentialAzureKeyVaultUpdate(ctx context.Context, d *schema.Resour
 				"tenant": d.Get("tenant").(string),
 			},
 		}
-
 		client := m.(*awx.AWX)
-		_, err = client.CredentialsService.UpdateCredentialsByID(id, updatedCredential, map[string]string{})
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Unable to update existing credentials",
-				Detail:   fmt.Sprintf("Unable to update existing credentials with id %d: %s", id, err.Error()),
-			})
-			return diags
+		if _, err = client.CredentialsService.UpdateCredentialsByID(id, payload, map[string]string{}); err != nil {
+			return utils.DiagUpdate(diagElementCredentialAzureKeyVaultTitle, d.Id(), err)
 		}
 	}
 

@@ -17,7 +17,7 @@ func resourceCredentialMachine() *schema.Resource {
 		CreateContext: resourceCredentialMachineCreate,
 		ReadContext:   resourceCredentialMachineRead,
 		UpdateContext: resourceCredentialMachineUpdate,
-		DeleteContext: CredentialsServiceDeleteByID,
+		DeleteContext: resourceCredentialDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,

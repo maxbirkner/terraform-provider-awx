@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
 func resourceSetting() *schema.Resource {
@@ -46,14 +47,9 @@ func resourceSetting() *schema.Resource {
 
 func resourceSettingUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.SettingService
 
-	_, err := awxService.GetSettingsBySlug("all", make(map[string]string))
-	if err != nil {
-		return buildDiagnosticsMessage(
-			"Create: failed to fetch settings",
-			"Failed to fetch setting, got: %s", err.Error(),
-		)
+	if _, err := client.SettingService.GetSettingsBySlug("all", make(map[string]string)); err != nil {
+		return utils.DiagCreate("Settings Update", err)
 	}
 
 	var (
@@ -66,13 +62,9 @@ func resourceSettingUpdate(ctx context.Context, d *schema.ResourceData, m interf
 	value := d.Get("value").(string)
 
 	// Attempt to unmarshall string into a map
-	err = json.Unmarshal([]byte(value), &mapDecoded)
-
-	if err != nil {
+	if err := json.Unmarshal([]byte(value), &mapDecoded); err != nil {
 		// Attempt to unmarshall string into an array
-		err = json.Unmarshal([]byte(value), &arrayDecoded)
-
-		if err != nil {
+		if err = json.Unmarshal([]byte(value), &arrayDecoded); err != nil {
 			formattedValue = value
 		} else {
 			formattedValue = arrayDecoded
@@ -85,29 +77,18 @@ func resourceSettingUpdate(ctx context.Context, d *schema.ResourceData, m interf
 		name: formattedValue,
 	}
 
-	_, err = awxService.UpdateSettings("all", payload, make(map[string]string))
-	if err != nil {
-		return buildDiagnosticsMessage(
-			"Create: setting not created",
-			"failed to save setting data, got: %s, %s", err.Error(), value,
-		)
+	if _, err := client.SettingService.UpdateSettings("all", payload, make(map[string]string)); err != nil {
+		return utils.DiagUpdate("Settings Update", formattedValue, err)
 	}
 
 	d.SetId(name)
 	return resourceSettingRead(ctx, d, m)
 }
 
-func resourceSettingRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceSettingRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.SettingService
-
-	_, err := awxService.GetSettingsBySlug("all", make(map[string]string))
-	if err != nil {
-		return buildDiagnosticsMessage(
-			"Unable to fetch settings",
-			"Unable to load settings with slug all: got %s", err.Error(),
-		)
+	if _, err := client.SettingService.GetSettingsBySlug("all", make(map[string]string)); err != nil {
+		return utils.DiagFetch("Settings Read", "all", err)
 	}
 
 	if err := d.Set("name", d.Id()); err != nil {
@@ -116,12 +97,10 @@ func resourceSettingRead(ctx context.Context, d *schema.ResourceData, m interfac
 	if err := d.Set("value", d.Get("value").(string)); err != nil {
 		return diag.FromErr(err)
 	}
-	return diags
+	return nil
 }
 
-func resourceSettingDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
+func resourceSettingDelete(_ context.Context, d *schema.ResourceData, _ interface{}) diag.Diagnostics {
 	d.SetId("")
-	return diags
+	return nil
 }

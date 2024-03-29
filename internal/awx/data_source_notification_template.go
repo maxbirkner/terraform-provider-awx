@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
 func dataSourceNotificationTemplate() *schema.Resource {
@@ -21,10 +22,11 @@ func dataSourceNotificationTemplate() *schema.Resource {
 				Description: "The ID of the Notification Template",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The name of the Notification Template",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the Notification Template",
+				ExactlyOneOf: []string{"id", "name"},
 			},
 		},
 	}
@@ -42,30 +44,19 @@ func dataSourceNotificationTemplatesRead(ctx context.Context, d *schema.Resource
 		params["id"] = strconv.Itoa(groupID.(int))
 	}
 
-	if len(params) == 0 {
-		return buildDiagnosticsMessage(
-			"Get: Missing Parameters",
-			"Please use one of the selectors (name or id)",
-		)
-	}
-
 	notificationTemplates, _, err := client.NotificationTemplatesService.List(params)
 	if err != nil {
-		return buildDiagnosticsMessage(
-			"Get: Fail to fetch NotificationTemplate",
-			"Fail to find the group got: %s",
-			err.Error(),
-		)
+		return utils.DiagFetch(diagInventoryTitle, params, err)
 	}
 	if len(notificationTemplates) > 1 {
-		return buildDiagnosticsMessage(
+		return utils.Diagf(
 			"Get: find more than one Element",
 			"The Query Returns more than one Group, %d",
 			len(notificationTemplates),
 		)
 	}
 	if len(notificationTemplates) == 0 {
-		return buildDiagnosticsMessage(
+		return utils.Diagf(
 			"Get: Notification Template does not exist",
 			"The Query Returns no Notification Template matching filter %v",
 			params,

@@ -16,7 +16,7 @@ func resourceCredentialSCM() *schema.Resource {
 		CreateContext: resourceCredentialSCMCreate,
 		ReadContext:   resourceCredentialSCMRead,
 		UpdateContext: resourceCredentialSCMUpdate,
-		DeleteContext: CredentialsServiceDeleteByID,
+		DeleteContext: resourceCredentialDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,

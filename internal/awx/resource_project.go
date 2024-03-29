@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
 //nolint:funlen
@@ -110,26 +111,24 @@ func resourceProject() *schema.Resource {
 
 func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.ProjectService
-
 	orgID := d.Get("organization_id").(int)
 	projectName := d.Get("name").(string)
-	_, res, err := awxService.ListProjects(map[string]string{
+	_, res, err := client.ProjectService.ListProjects(map[string]string{
 		"name":         projectName,
 		"organization": strconv.Itoa(orgID),
 	},
 	)
 	if err != nil {
-		return buildDiagnosticsMessage("Create: Fail to find Project", "Fail to find Project %s Organization ID %v, %s", projectName, orgID, err.Error())
+		return utils.DiagFetch(diagProjectTitle, orgID, err)
 	}
 	if len(res.Results) >= 1 {
-		return buildDiagnosticsMessage("Create: Always exist", "Project with name %s  already exists in the Organization ID %v", projectName, orgID)
+		return utils.Diagf("Create: Always exist", "Project with name %s  already exists in the Organization ID %v", projectName, orgID)
 	}
 	credentials := ""
 	if d.Get("scm_credential_id").(int) > 0 {
 		credentials = strconv.Itoa(d.Get("scm_credential_id").(int))
 	}
-	result, err := awxService.CreateProject(map[string]interface{}{
+	result, err := client.ProjectService.CreateProject(map[string]interface{}{
 		"name":                 projectName,
 		"description":          d.Get("description").(string),
 		"local_path":           d.Get("local_path").(string),
@@ -146,7 +145,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, m interf
 		"allow_override":           d.Get("allow_override").(bool),
 	}, map[string]string{})
 	if err != nil {
-		return buildDiagnosticsMessage("Create: Project not created", "Project with name %s  in the Organization ID %v not created, %s", projectName, orgID, err.Error())
+		return utils.DiagCreate(diagProjectTitle, err)
 	}
 
 	d.SetId(strconv.Itoa(result.ID))
@@ -155,9 +154,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, m interf
 
 func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.ProjectService
-
-	id, diags := convertStateIDToNummeric("Update Project", d)
+	id, diags := utils.StateIDToInt("Update Project", d)
 	if diags.HasError() {
 		return diags
 	}
@@ -186,47 +183,40 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, m interf
 		data["local_path"] = d.Get("local_path").(string)
 	}
 
-	_, err := awxService.UpdateProject(id, data, map[string]string{})
-	if err != nil {
-		return buildDiagnosticsMessage("Update: Fail To Update Project", "Fail to get Project with ID %v, got %s", id, err.Error())
+	if _, err := client.ProjectService.UpdateProject(id, data, map[string]string{}); err != nil {
+		return utils.DiagUpdate(diagProjectTitle, id, err)
 	}
 	return resourceProjectRead(ctx, d, m)
 }
 
-func resourceProjectRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceProjectRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.ProjectService
-
-	id, diags := convertStateIDToNummeric("Read Project", d)
+	id, diags := utils.StateIDToInt("Read Project", d)
 	if diags.HasError() {
 		return diags
 	}
 
-	res, err := awxService.GetProjectByID(id, make(map[string]string))
+	res, err := client.ProjectService.GetProjectByID(id, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail("project", id, err)
+		return utils.DiagNotFound(diagProjectTitle, id, err)
 	}
 	d = setProjectResourceData(d, res)
 	return diags
 }
 
-func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	digMessagePart := "Project"
+func resourceProjectDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.ProjectService
 	var jobID int
 	var finished time.Time
-	id, diags := convertStateIDToNummeric("Delete Project", d)
+	id, diags := utils.StateIDToInt("Delete Project", d)
 	if diags.HasError() {
 		return diags
 	}
 
-	res, err := awxService.GetProjectByID(id, make(map[string]string))
+	res, err := client.ProjectService.GetProjectByID(id, make(map[string]string))
 	if err != nil {
 		d.SetId("")
-		return buildDiagNotFoundFail("project", id, err)
+		return utils.DiagNotFound(diagProjectTitle, id, err)
 	}
 
 	if res.SummaryFields.CurrentJob["id"] != nil {
@@ -235,12 +225,11 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, m interf
 		jobID = int(res.SummaryFields.LastJob["id"].(float64))
 	}
 	if jobID != 0 {
-		_, err = client.ProjectUpdatesService.ProjectUpdateCancel(jobID)
-		if err != nil {
-			return buildDiagnosticsMessage(
+		if _, err = client.ProjectUpdatesService.ProjectUpdateCancel(jobID); err != nil {
+			return utils.Diagf(
 				"Delete: Fail to canel Job",
 				"Fail to canel the Job %v for Project with ID %v, got %s",
-				jobID, id, err.Error(),
+				jobID, id, err,
 			)
 		}
 	}
@@ -251,8 +240,8 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, m interf
 		time.Sleep(1 * time.Second)
 	}
 
-	if _, err = awxService.DeleteProject(id); err != nil {
-		return buildDiagDeleteFail(digMessagePart, fmt.Sprintf("ProjectID %v, got %s ", id, err.Error()))
+	if _, err = client.ProjectService.DeleteProject(id); err != nil {
+		return utils.DiagDelete(diagProjectTitle, id, err)
 	}
 	d.SetId("")
 	return diags

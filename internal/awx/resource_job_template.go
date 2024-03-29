@@ -3,7 +3,6 @@ package awx
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -11,6 +10,8 @@ import (
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
 	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagJobTemplateTitle = "Job Template"
 
 //nolint:funlen
 func resourceJobTemplate() *schema.Resource {
@@ -77,7 +78,6 @@ func resourceJobTemplate() *schema.Resource {
 			"extra_vars": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "",
 				Description: "The extra variables to associate with the job template.",
 			},
 			"job_tags": {
@@ -202,11 +202,8 @@ func resourceJobTemplate() *schema.Resource {
 }
 
 func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
-	awxService := client.JobTemplateService
-
-	result, err := awxService.CreateJobTemplate(map[string]interface{}{
+	result, err := client.JobTemplateService.CreateJobTemplate(map[string]interface{}{
 		"name":                     d.Get("name").(string),
 		"description":              d.Get("description").(string),
 		"job_type":                 d.Get("job_type").(string),
@@ -241,13 +238,7 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, m in
 		"execution_environment":    utils.AtoiDefault(d.Get("execution_environment").(string), nil),
 	}, map[string]string{})
 	if err != nil {
-		log.Printf("Fail to Create Template %v", err)
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create JobTemplate",
-			Detail:   fmt.Sprintf("JobTemplate with name %s in the project id %d, failed to create %s", d.Get("name").(string), d.Get("project_id").(int), err.Error()),
-		})
-		return diags
+		return utils.DiagCreate(diagJobTemplateTitle, err)
 	}
 
 	d.SetId(strconv.Itoa(result.ID))
@@ -255,21 +246,18 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, m in
 }
 
 func resourceJobTemplateUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
-	awxService := client.JobTemplateService
-	id, diags := convertStateIDToNummeric("Update JobTemplate", d)
+	id, diags := utils.StateIDToInt(diagJobTemplateTitle, d)
 	if diags.HasError() {
 		return diags
 	}
 
 	params := make(map[string]string)
-	_, err := awxService.GetJobTemplateByID(id, params)
-	if err != nil {
-		return buildDiagNotFoundFail("job template", id, err)
+	if _, err := client.JobTemplateService.GetJobTemplateByID(id, params); err != nil {
+		return utils.DiagNotFound(diagJobTemplateTitle, id, err)
 	}
 
-	_, err = awxService.UpdateJobTemplate(id, map[string]interface{}{
+	if _, err := client.JobTemplateService.UpdateJobTemplate(id, map[string]interface{}{
 		"name":                     d.Get("name").(string),
 		"description":              d.Get("description").(string),
 		"job_type":                 d.Get("job_type").(string),
@@ -302,34 +290,41 @@ func resourceJobTemplateUpdate(ctx context.Context, d *schema.ResourceData, m in
 		"allow_simultaneous":       d.Get("allow_simultaneous").(bool),
 		"custom_virtualenv":        utils.AtoiDefault(d.Get("custom_virtualenv").(string), nil),
 		"execution_environment":    utils.AtoiDefault(d.Get("execution_environment").(string), nil),
-	}, map[string]string{})
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to update JobTemplate",
-			Detail:   fmt.Sprintf("JobTemplate with name %s in the project id %d failed to update %s", d.Get("name").(string), d.Get("project_id").(int), err.Error()),
-		})
-		return diags
+	}, map[string]string{}); err != nil {
+		return utils.DiagUpdate(diagJobTemplateTitle, id, err)
 	}
 
 	return resourceJobTemplateRead(ctx, d, m)
 }
 
-func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceJobTemplateRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.JobTemplateService
-	id, diags := convertStateIDToNummeric("Read JobTemplate", d)
+	id, diags := utils.StateIDToInt(diagJobTemplateTitle, d)
 	if diags.HasError() {
 		return diags
 	}
 
-	res, err := awxService.GetJobTemplateByID(id, make(map[string]string))
+	res, err := client.JobTemplateService.GetJobTemplateByID(id, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail("job template", id, err)
-
+		return utils.DiagNotFound(diagJobTemplateTitle, id, err)
+	}
+	if res.ExtraVars != "" {
+		res.ExtraVars = utils.Normalize(res.ExtraVars)
 	}
 	d = setJobTemplateResourceData(d, res)
+	return nil
+}
+
+func resourceJobTemplateDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	client := m.(*awx.AWX)
+	id, diags := utils.StateIDToInt(diagJobTemplateTitle, d)
+	if diags.HasError() {
+		return diags
+	}
+	if _, err := client.JobTemplateService.DeleteJobTemplate(id); err != nil {
+		return utils.DiagDelete(diagJobTemplateTitle, id, err)
+	}
+	d.SetId("")
 	return nil
 }
 
@@ -358,7 +353,7 @@ func setJobTemplateResourceData(d *schema.ResourceData, r *awx.JobTemplate) *sch
 	if err := d.Set("description", r.Description); err != nil {
 		fmt.Println("Error setting description", err)
 	}
-	if err := d.Set("extra_vars", normalizeJsonYaml(r.ExtraVars)); err != nil {
+	if err := d.Set("extra_vars", utils.Normalize(r.ExtraVars)); err != nil {
 		fmt.Println("Error setting extra_vars", err)
 	}
 	if err := d.Set("force_handlers", r.ForceHandlers); err != nil {

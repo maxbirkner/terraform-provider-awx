@@ -8,7 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagOrganizationRole = "Organization Role"
 
 func dataSourceOrganizationRole() *schema.Resource {
 	return &schema.Resource{
@@ -42,18 +45,14 @@ func dataSourceOrganizationRolesRead(ctx context.Context, d *schema.ResourceData
 	client := m.(*awx.AWX)
 	params := make(map[string]string)
 
-	org_id := d.Get("organization_id").(int)
+	orgID := d.Get("organization_id").(int)
 
-	organization, err := client.OrganizationsService.GetOrganizationsByID(org_id, params)
+	organization, err := client.OrganizationsService.GetOrganizationsByID(orgID, params)
 	if err != nil {
-		return buildDiagnosticsMessage(
-			"Get: Fail to fetch organization role",
-			"Fail to find the organization role got: %s",
-			err.Error(),
-		)
+		return utils.DiagFetch(diagOrganizationRole, orgID, err)
 	}
 
-	roleslist := []*awx.ApplyRole{
+	rolesList := []*awx.ApplyRole{
 		organization.SummaryFields.ObjectRoles.AdhocRole,
 		organization.SummaryFields.ObjectRoles.AdminRole,
 		organization.SummaryFields.ObjectRoles.ApprovalRole,
@@ -73,7 +72,7 @@ func dataSourceOrganizationRolesRead(ctx context.Context, d *schema.ResourceData
 
 	if roleID, okID := d.GetOk("id"); okID {
 		id := roleID.(int)
-		for _, v := range roleslist {
+		for _, v := range rolesList {
 			if v != nil && id == v.ID {
 				d = setOrganizationRoleData(d, v)
 				return diags
@@ -84,7 +83,7 @@ func dataSourceOrganizationRolesRead(ctx context.Context, d *schema.ResourceData
 	if roleName, okName := d.GetOk("name"); okName {
 		name := roleName.(string)
 
-		for _, v := range roleslist {
+		for _, v := range rolesList {
 			if v != nil && name == v.Name {
 				d = setOrganizationRoleData(d, v)
 				return diags
@@ -92,10 +91,7 @@ func dataSourceOrganizationRolesRead(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	return buildDiagnosticsMessage(
-		"Failed to fetch organization role - Not Found",
-		"The organization role was not found",
-	)
+	return utils.DiagNotFound(diagOrganizationRole, orgID, nil)
 }
 
 func setOrganizationRoleData(d *schema.ResourceData, r *awx.ApplyRole) *schema.ResourceData {

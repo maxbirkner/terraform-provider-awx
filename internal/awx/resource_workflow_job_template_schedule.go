@@ -80,7 +80,7 @@ func resourceWorkflowJobTemplateScheduleCreate(ctx context.Context, d *schema.Re
 		"description": d.Get("description").(string),
 		"enabled":     d.Get("enabled").(bool),
 		"inventory":   utils.AtoiDefault(d.Get("inventory").(string), nil),
-		"extra_data":  unmarshalYaml(d.Get("extra_data").(string)),
+		"extra_data":  utils.UnmarshalYAML(d.Get("extra_data").(string)),
 	}, map[string]string{})
 	if err != nil {
 		log.Printf("Fail to Create Schedule for WorkflowJobTemplate %d: %v", workflowJobTemplateID, err)

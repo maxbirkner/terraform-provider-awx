@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
 func resourceTeam() *schema.Resource {
@@ -64,41 +65,34 @@ func resourceTeam() *schema.Resource {
 
 func resourceTeamCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.TeamService
-
 	orgID := d.Get("organization_id").(int)
 	teamName := d.Get("name").(string)
-	_, res, err := awxService.ListTeams(map[string]string{
+	_, res, err := client.TeamService.ListTeams(map[string]string{
 		"name":         teamName,
 		"organization": strconv.Itoa(orgID),
-	},
-	)
+	})
 	if err != nil {
-		return buildDiagnosticsMessage("Create: Fail to find Team", "Fail to find Team %s Organization ID %v, %s", teamName, orgID, err.Error())
+		return utils.Diagf("Create: Fail to find Team", "Fail to find Team %s Organization ID %v, %s", teamName, orgID, err)
 	}
 	if len(res.Results) >= 1 {
-		return buildDiagnosticsMessage("Create: Already exist", "Team with name %s  already exists in the Organization ID %v", teamName, orgID)
+		return utils.Diagf("Create: Already exist", "Team with name %s  already exists in the Organization ID %v", teamName, orgID)
 	}
 
-	result, err := awxService.CreateTeam(map[string]interface{}{
+	result, err := client.TeamService.CreateTeam(map[string]interface{}{
 		"name":         teamName,
 		"description":  d.Get("description").(string),
 		"organization": d.Get("organization_id").(int),
 	}, map[string]string{})
 	if err != nil {
-		return buildDiagnosticsMessage("Create: Team not created", "Team with name %s  in the Organization ID %v not created, %s", teamName, orgID, err.Error())
+		return utils.Diagf("Create: Team not created", "Team with name %s  in the Organization ID %v not created, %s", teamName, orgID, err)
 	}
 
 	d.SetId(strconv.Itoa(result.ID))
 
 	if rent, entOk := d.GetOk("role_entitlement"); entOk {
 		entset := rent.(*schema.Set).List()
-		err := roleTeamEntitlementUpdate(m, result.ID, entset, false)
-		if err != nil {
-			return buildDiagnosticsMessage(
-				"Create: team role entitlement not created",
-				"Role entitlement for team %s not created: %s", teamName, err.Error(),
-			)
+		if err := roleTeamEntitlementUpdate(m, result.ID, entset, false); err != nil {
+			return utils.Diagf("Create: team role entitlement not created", "Role entitlement for team %s not created: %s", teamName, err)
 		}
 	}
 
@@ -107,8 +101,6 @@ func resourceTeamCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 func roleTeamEntitlementUpdate(m interface{}, teamID int, roles []interface{}, remove bool) error {
 	client := m.(*awx.AWX)
-	awxService := client.TeamService
-
 	for _, v := range roles {
 		emap := v.(map[string]interface{})
 		payload := map[string]interface{}{
@@ -118,8 +110,7 @@ func roleTeamEntitlementUpdate(m interface{}, teamID int, roles []interface{}, r
 			payload["disassociate"] = true // presence of key triggers removal
 		}
 
-		_, err := awxService.UpdateTeamRoleEntitlement(teamID, payload, make(map[string]string))
-		if err != nil {
+		if _, err := client.TeamService.UpdateTeamRoleEntitlement(teamID, payload, make(map[string]string)); err != nil {
 			return err
 		}
 	}
@@ -130,7 +121,7 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	client := m.(*awx.AWX)
 	awxService := client.TeamService
 
-	id, diags := convertStateIDToNummeric("Update Team", d)
+	id, diags := utils.StateIDToInt("Update Team", d)
 	if diags.HasError() {
 		return diags
 	}
@@ -148,70 +139,54 @@ func resourceTeamUpdate(ctx context.Context, d *schema.ResourceData, m interface
 		remove := oe.Difference(ne).List()
 		add := ne.Difference(oe).List()
 
-		err := roleTeamEntitlementUpdate(m, id, remove, true)
-		if err != nil {
-			return buildDiagnosticsMessage(
-				"Update: Failed To Update Team Role Entitlement",
-				"Failed to remove team role entitlement: got %s", err.Error(),
-			)
+		if err := roleTeamEntitlementUpdate(m, id, remove, true); err != nil {
+			return utils.DiagUpdate("Team Role Entitlement", id, err)
 		}
-		err = roleTeamEntitlementUpdate(m, id, add, false)
-		if err != nil {
-			return buildDiagnosticsMessage(
-				"Update: Failed To Update Team Role Entitlement",
-				"Failed to add team role entitlement: got %s", err.Error(),
-			)
+		if err := roleTeamEntitlementUpdate(m, id, add, false); err != nil {
+			return utils.DiagUpdate("Team Role Entitlement", id, err)
 		}
-		//d.SetPartial("role_entitlemen")
 	}
-	_, err := awxService.UpdateTeam(id, map[string]interface{}{
+	if _, err := awxService.UpdateTeam(id, map[string]interface{}{
 		"name":         d.Get("name").(string),
 		"description":  d.Get("description").(string),
 		"organization": d.Get("organization_id").(int),
-	}, map[string]string{})
-	if err != nil {
-		return buildDiagnosticsMessage("Update: Failed To Update Team", "Fail to get Team with ID %v, got %s", id, err.Error())
+	}, map[string]string{}); err != nil {
+		return utils.DiagUpdate("Team Role Entitlement", id, err)
 	}
 	d.Partial(false)
 	return resourceTeamRead(ctx, d, m)
 }
 
-func resourceTeamRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceTeamRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.TeamService
-
-	id, diags := convertStateIDToNummeric("Read Team", d)
+	id, diags := utils.StateIDToInt("Read Team", d)
 	if diags.HasError() {
 		return diags
 	}
 
-	team, err := awxService.GetTeamByID(id, make(map[string]string))
+	team, err := client.TeamService.GetTeamByID(id, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail("team", id, err)
+		return utils.DiagNotFound("team", id, err)
 	}
-	entitlements, _, err := awxService.ListTeamRoleEntitlements(id, make(map[string]string))
+	entitlements, _, err := client.TeamService.ListTeamRoleEntitlements(id, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail("team roles", id, err)
+		return utils.DiagNotFound("team roles", id, err)
 	}
 
 	d = setTeamResourceData(d, team, entitlements)
 	return diags
 }
 
-func resourceTeamDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	digMessagePart := "Team"
+func resourceTeamDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.TeamService
 
-	id, diags := convertStateIDToNummeric("Delete Team", d)
+	id, diags := utils.StateIDToInt("Delete Team", d)
 	if diags.HasError() {
 		return diags
 	}
 
-	if _, err := awxService.DeleteTeam(id); err != nil {
-		return buildDiagDeleteFail(digMessagePart, fmt.Sprintf("TeamID %v, got %s ", id, err.Error()))
+	if _, err := client.TeamService.DeleteTeam(id); err != nil {
+		return utils.DiagDelete("Team", id, err)
 	}
 	d.SetId("")
 	return diags

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strconv"
 	"time"
 
@@ -12,7 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagJobTemplateLaunchTitle = "Job Template Launch"
 
 //nolint:funlen
 func resourceJobTemplateLaunch() *schema.Resource {
@@ -49,7 +51,7 @@ func resourceJobTemplateLaunch() *schema.Resource {
 				Optional:    true,
 				Description: "Override job template variables. YAML or JSON values are supported.",
 				ForceNew:    true,
-				StateFunc:   normalizeJsonYaml,
+				StateFunc:   utils.Normalize,
 			},
 			"wait_for_completion": {
 				Type:        schema.TypeBool,
@@ -63,7 +65,7 @@ func resourceJobTemplateLaunch() *schema.Resource {
 	}
 }
 
-func statusInstanceState(ctx context.Context, svc *awx.JobService, id int) retry.StateRefreshFunc {
+func statusInstanceState(_ context.Context, svc *awx.JobService, id int) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := svc.GetJob(id, map[string]string{})
 		return output, output.Status, err
@@ -94,15 +96,11 @@ type JobTemplateLaunchData struct {
 }
 
 func resourceJobTemplateLaunchCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
-	awxService := client.JobTemplateService
-	awxJobService := client.JobService
 
 	jobTemplateID := d.Get("job_template_id").(int)
-	_, err := awxService.GetJobTemplateByID(jobTemplateID, make(map[string]string))
-	if err != nil {
-		return buildDiagNotFoundFail("job template", jobTemplateID, err)
+	if _, err := client.JobTemplateService.GetJobTemplateByID(jobTemplateID, make(map[string]string)); err != nil {
+		return utils.DiagNotFound(diagJobTemplateLaunchTitle, jobTemplateID, err)
 	}
 
 	data := JobTemplateLaunchData{
@@ -112,58 +110,48 @@ func resourceJobTemplateLaunchCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	var iData map[string]interface{}
-	idata, _ := json.Marshal(data)
+	idata, err := json.Marshal(data)
+	if err != nil {
+		return utils.DiagCreate(diagJobTemplateLaunchTitle, err)
+	}
 	if err := json.Unmarshal(idata, &iData); err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create JobTemplate",
-			Detail:   fmt.Sprintf("JobTemplateLaunch with template ID %d, failed to create %s", d.Get("job_template_id").(int), err.Error()),
-		})
-		return diags
+		return utils.DiagCreate(diagJobTemplateLaunchTitle, err)
 	}
 
-	res, err := awxService.Launch(jobTemplateID, iData, map[string]string{})
+	res, err := client.JobTemplateService.Launch(jobTemplateID, iData, map[string]string{})
 	if err != nil {
-		log.Printf("Failed to create Template Launch %v", err)
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create JobTemplate",
-			Detail:   fmt.Sprintf("JobTemplateLaunch with template ID %d, failed to create %s", d.Get("job_template_id").(int), err.Error()),
-		})
-		return diags
+		return utils.DiagCreate(diagJobTemplateLaunchTitle, err)
 	}
 
 	// return resourceJobRead(ctx, d, m)
 	d.SetId(strconv.Itoa(res.ID))
 
 	if d.Get("wait_for_completion").(bool) {
-		err = jobTemplateLaunchWait(ctx, awxJobService, res, d.Timeout(schema.TimeoutCreate))
+		err = jobTemplateLaunchWait(ctx, client.JobService, res, d.Timeout(schema.TimeoutCreate))
 		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "JobTemplate execution failure",
-				Detail:   fmt.Sprintf("JobTemplateLaunch with ID %d and template ID %d, failed to complete %s", res.ID, d.Get("job_template_id").(int), err.Error()),
-			})
+			return utils.Diagf(
+				"JobTemplate execution failure",
+				fmt.Sprintf("JobTemplateLaunch with ID %d and template ID %d, failed to complete %s", res.ID, d.Get("job_template_id").(int), err.Error()),
+			)
 		}
 	}
-	return diags
+	return nil
 }
 
-func resourceJobRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	return diags
+func resourceJobRead(_ context.Context, _ *schema.ResourceData, _ interface{}) diag.Diagnostics {
+	return nil
 }
 
-func resourceJobDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceJobDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.JobService
-	jobID, diags := convertStateIDToNummeric("Delete Job", d)
-	_, err := awxService.GetJob(jobID, map[string]string{})
-	if err != nil {
-		return buildDiagNotFoundFail("job", jobID, err)
+	jobID, diags := utils.StateIDToInt("Delete Job", d)
+	if diags.HasError() {
+		return diags
+	}
+	if _, err := client.JobService.GetJob(jobID, map[string]string{}); err != nil {
+		return utils.DiagNotFound(diagJobTemplateLaunchTitle, jobID, err)
 	}
 
 	d.SetId("")
-	return diags
+	return nil
 }

@@ -8,7 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagProjectRole = "Project Role"
 
 func dataSourceProjectRole() *schema.Resource {
 	return &schema.Resource{
@@ -42,18 +45,14 @@ func dataSourceProjectRolesRead(ctx context.Context, d *schema.ResourceData, m i
 	client := m.(*awx.AWX)
 	params := make(map[string]string)
 
-	proj_id := d.Get("project_id").(int)
+	projID := d.Get("project_id").(int)
 
-	Project, err := client.ProjectService.GetProjectByID(proj_id, params)
+	Project, err := client.ProjectService.GetProjectByID(projID, params)
 	if err != nil {
-		return buildDiagnosticsMessage(
-			"Get: Fail to fetch Project",
-			"Fail to find the project got: %s",
-			err.Error(),
-		)
+		return utils.DiagFetch(diagProjectRole, projID, err)
 	}
 
-	roleslist := []*awx.ApplyRole{
+	rolesList := []*awx.ApplyRole{
 		Project.SummaryFields.ObjectRoles.UseRole,
 		Project.SummaryFields.ObjectRoles.AdminRole,
 		Project.SummaryFields.ObjectRoles.UpdateRole,
@@ -62,7 +61,7 @@ func dataSourceProjectRolesRead(ctx context.Context, d *schema.ResourceData, m i
 
 	if roleID, okID := d.GetOk("id"); okID {
 		id := roleID.(int)
-		for _, v := range roleslist {
+		for _, v := range rolesList {
 			if v != nil && id == v.ID {
 				d = setProjectRoleData(d, v)
 				return diags
@@ -73,7 +72,7 @@ func dataSourceProjectRolesRead(ctx context.Context, d *schema.ResourceData, m i
 	if roleName, okName := d.GetOk("name"); okName {
 		name := roleName.(string)
 
-		for _, v := range roleslist {
+		for _, v := range rolesList {
 			if v != nil && name == v.Name {
 				d = setProjectRoleData(d, v)
 				return diags
@@ -81,10 +80,7 @@ func dataSourceProjectRolesRead(ctx context.Context, d *schema.ResourceData, m i
 		}
 	}
 
-	return buildDiagnosticsMessage(
-		"Failed to fetch project role - Not Found",
-		"The project role was not found",
-	)
+	return utils.DiagNotFound(diagProjectRole, params, nil)
 }
 
 func setProjectRoleData(d *schema.ResourceData, r *awx.ApplyRole) *schema.ResourceData {

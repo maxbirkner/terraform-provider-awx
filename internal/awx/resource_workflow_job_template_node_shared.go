@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
 var workflowJobNodeSchema = map[string]*schema.Schema{
@@ -18,7 +19,7 @@ var workflowJobNodeSchema = map[string]*schema.Schema{
 		Optional:    true,
 		Default:     "",
 		Description: "",
-		StateFunc:   normalizeJsonYaml,
+		StateFunc:   utils.Normalize,
 	},
 	"workflow_job_template_node_id": {
 		Type:        schema.TypeInt,

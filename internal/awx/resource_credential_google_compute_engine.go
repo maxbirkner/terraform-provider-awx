@@ -16,7 +16,7 @@ func resourceCredentialGoogleComputeEngine() *schema.Resource {
 		CreateContext: resourceCredentialGoogleComputeEngineCreate,
 		ReadContext:   resourceCredentialGoogleComputeEngineRead,
 		UpdateContext: resourceCredentialGoogleComputeEngineUpdate,
-		DeleteContext: CredentialsServiceDeleteByID,
+		DeleteContext: resourceCredentialDelete,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,

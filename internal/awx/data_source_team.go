@@ -7,7 +7,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagTeamTitle = "Team"
 
 func dataSourceTeam() *schema.Resource {
 	return &schema.Resource{
@@ -30,7 +33,7 @@ func dataSourceTeam() *schema.Resource {
 	}
 }
 
-func dataSourceTeamsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceTeamsRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
 	params := make(map[string]string)
@@ -42,47 +45,32 @@ func dataSourceTeamsRead(ctx context.Context, d *schema.ResourceData, m interfac
 		params["id"] = strconv.Itoa(teamID.(int))
 	}
 
-	if len(params) == 0 {
-		return buildDiagnosticsMessage(
-			"Get: Missing Parameters",
-			"Please use one of the selectors (name or id)",
-		)
-	}
-	Teams, _, err := client.TeamService.ListTeams(params)
+	teams, _, err := client.TeamService.ListTeams(params)
 	if err != nil {
-		return buildDiagnosticsMessage(
-			"Get: Fail to fetch Team",
-			"Fail to find the team got: %s",
-			err.Error(),
-		)
+		return utils.DiagFetch(diagTeamTitle, params, err)
 	}
 
-	if len(Teams) > 1 {
-		return buildDiagnosticsMessage(
+	if len(teams) > 1 {
+		return utils.Diagf(
 			"Get: find more than one Element",
 			"The Query Returns more than one team, %d",
-			len(Teams),
+			len(teams),
 		)
 	}
 
-	if len(Teams) == 0 {
-		return buildDiagnosticsMessage(
+	if len(teams) == 0 {
+		return utils.Diagf(
 			"Get: Team does not exist",
 			"The Query Returns no Team matching filter %v",
 			params,
 		)
 	}
 
-	Team := Teams[0]
-	Entitlements, _, err := client.TeamService.ListTeamRoleEntitlements(Team.ID, make(map[string]string))
+	entitlements, _, err := client.TeamService.ListTeamRoleEntitlements(teams[0].ID, make(map[string]string))
 	if err != nil {
-		return buildDiagnosticsMessage(
-			"Get: Failed to fetch team role entitlements",
-			"Fail to retrieve team role entitlements got: %s",
-			err.Error(),
-		)
+		return utils.DiagFetch(diagTeamTitle, teams[0].ID, err)
 	}
 
-	d = setTeamResourceData(d, Team, Entitlements)
+	d = setTeamResourceData(d, teams[0], entitlements)
 	return diags
 }

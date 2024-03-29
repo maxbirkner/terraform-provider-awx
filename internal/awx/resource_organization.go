@@ -3,12 +3,12 @@ package awx
 import (
 	"context"
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
 func resourceOrganization() *schema.Resource {
@@ -62,11 +62,8 @@ func resourceOrganization() *schema.Resource {
 }
 
 func resourceOrganizationsCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
-	awxService := client.OrganizationsService
-
-	result, err := awxService.CreateOrganization(map[string]interface{}{
+	result, err := client.OrganizationsService.CreateOrganization(map[string]interface{}{
 		"name":                d.Get("name").(string),
 		"description":         d.Get("description").(string),
 		"max_hosts":           d.Get("max_hosts").(int),
@@ -74,13 +71,7 @@ func resourceOrganizationsCreate(ctx context.Context, d *schema.ResourceData, m 
 		"default_environment": d.Get("default_environment").(int),
 	}, map[string]string{})
 	if err != nil {
-		log.Printf("Fail to Create Organization %v", err)
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create Organizations",
-			Detail:   fmt.Sprintf("Organizations with name %s, failed to create %s", d.Get("name").(string), err.Error()),
-		})
-		return diags
+		return utils.DiagCreate(diagOrganizationTitle, err)
 	}
 
 	d.SetId(strconv.Itoa(result.ID))
@@ -88,70 +79,55 @@ func resourceOrganizationsCreate(ctx context.Context, d *schema.ResourceData, m 
 }
 
 func resourceOrganizationsUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
-	awxService := client.OrganizationsService
-	id, diags := convertStateIDToNummeric("Update Organizations", d)
+	id, diags := utils.StateIDToInt("Update Organizations", d)
 	if diags.HasError() {
 		return diags
 	}
 
 	params := make(map[string]string)
-
-	_, err := awxService.GetOrganizationsByID(id, params)
-	if err != nil {
-		return buildDiagNotFoundFail("Organizations", id, err)
+	if _, err := client.OrganizationsService.GetOrganizationsByID(id, params); err != nil {
+		return utils.DiagNotFound(diagOrganizationTitle, id, err)
 	}
 
-	_, err = awxService.UpdateOrganization(id, map[string]interface{}{
+	if _, err := client.OrganizationsService.UpdateOrganization(id, map[string]interface{}{
 		"name":                d.Get("name").(string),
 		"description":         d.Get("description").(string),
 		"max_hosts":           d.Get("max_hosts").(int),
 		"custom_virtualenv":   d.Get("description").(string),
 		"default_environment": d.Get("default_environment").(int),
-	}, map[string]string{})
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to update Organizations",
-			Detail:   fmt.Sprintf("Organizations with name %s failed to update %s", d.Get("name").(string), err.Error()),
-		})
-		return diags
+	}, map[string]string{}); err != nil {
+		return utils.DiagUpdate(diagOrganizationTitle, id, err)
 	}
 
 	return resourceOrganizationsRead(ctx, d, m)
 }
 
-func resourceOrganizationsRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceOrganizationsRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.OrganizationsService
-	id, diags := convertStateIDToNummeric("Read Organizations", d)
+	id, diags := utils.StateIDToInt("Read Organizations", d)
 	if diags.HasError() {
 		return diags
 	}
 
-	res, err := awxService.GetOrganizationsByID(id, make(map[string]string))
+	res, err := client.OrganizationsService.GetOrganizationsByID(id, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail("Organization", id, err)
+		return utils.DiagNotFound(diagOrganizationTitle, id, err)
 
 	}
 	d = setOrganizationsResourceData(d, res)
 	return nil
 }
 
-func resourceOrganizationsDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	digMessagePart := "Organization"
+func resourceOrganizationsDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.OrganizationsService
-	id, diags := convertStateIDToNummeric("Delete Organization", d)
+	id, diags := utils.StateIDToInt("Delete Organization", d)
 	if diags.HasError() {
 		return diags
 	}
 
-	if _, err := awxService.DeleteOrganization(id); err != nil {
-		return buildDiagDeleteFail(digMessagePart, fmt.Sprintf("OrganizationID %v, got %s ", id, err.Error()))
+	if _, err := client.OrganizationsService.DeleteOrganization(id); err != nil {
+		return utils.DiagDelete(diagOrganizationTitle, id, err)
 	}
 	d.SetId("")
 	return diags

@@ -7,7 +7,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagOrganizationTitle = "Organization"
 
 func dataSourceOrganization() *schema.Resource {
 	return &schema.Resource{
@@ -21,10 +24,11 @@ func dataSourceOrganization() *schema.Resource {
 				Description: "The unique identifier of the organization",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The name of the organization",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the organization",
+				ExactlyOneOf: []string{"id", "name"},
 			},
 		},
 	}
@@ -42,29 +46,19 @@ func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, m i
 		params["id"] = strconv.Itoa(groupID.(int))
 	}
 
-	if len(params) == 0 {
-		return buildDiagnosticsMessage(
-			"Get: Missing Parameters",
-			"Please use one of the selectors (name or group_id)",
-		)
-	}
 	organizations, err := client.OrganizationsService.ListOrganizations(params)
 	if err != nil {
-		return buildDiagnosticsMessage(
-			"Get: Fail to fetch organization",
-			"Fail to find the organization got: %s",
-			err.Error(),
-		)
+		return utils.DiagFetch(diagOrganizationTitle, params, err)
 	}
 	if len(organizations) > 1 {
-		return buildDiagnosticsMessage(
+		return utils.Diagf(
 			"Get: find more than one Element",
 			"The Query Returns more than one organization, %d",
 			len(organizations),
 		)
 	}
 	if len(organizations) == 0 {
-		return buildDiagnosticsMessage(
+		return utils.Diagf(
 			"Get: Organization does not exist",
 			"The Query Returns no Organization matching filter %v",
 			params,

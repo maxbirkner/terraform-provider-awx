@@ -2,7 +2,6 @@ package awx
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -10,7 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagNotificationTemplateTitle = "Notification Template"
 
 func resourceNotificationTemplate() *schema.Resource {
 	return &schema.Resource{
@@ -42,9 +44,9 @@ func resourceNotificationTemplate() *schema.Resource {
 				Description: "The description of the notification template.",
 			},
 			"notification_configuration": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeMap,
 				Optional:    true,
-				Default:     "",
+				Default:     nil,
 				Description: "The configuration of the notification template.",
 			},
 		},
@@ -55,25 +57,12 @@ func resourceNotificationTemplateCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
 	awxService := client.NotificationTemplatesService
-
-	notificationConfigurationStr := d.Get("notification_configuration").(string)
-	notificationConfigurationMap := make(map[string]interface{})
-	err := json.Unmarshal([]byte(notificationConfigurationStr), &notificationConfigurationMap)
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create NotificationTemplate",
-			Detail:   fmt.Sprintf("error while unmarshal notification_configuration: %s", err.Error()),
-		})
-		return diags
-	}
-
 	result, err := awxService.Create(map[string]interface{}{
 		"name":                       d.Get("name").(string),
 		"description":                d.Get("description").(string),
 		"organization":               d.Get("organization_id").(string),
 		"notification_type":          d.Get("notification_type").(string),
-		"notification_configuration": notificationConfigurationMap,
+		"notification_configuration": parseNotifyConfig(d.Get("notification_configuration").(map[string]interface{})),
 	}, map[string]string{})
 	if err != nil {
 		log.Printf("Fail to Create notification_template %v", err)
@@ -93,79 +82,55 @@ func resourceNotificationTemplateUpdate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
 	awxService := client.NotificationTemplatesService
-	id, diags := convertStateIDToNummeric("Update NotificationTemplate", d)
+	id, diags := utils.StateIDToInt("Update NotificationTemplate", d)
 	if diags.HasError() {
 		return diags
 	}
 
 	params := make(map[string]string)
-	_, err := awxService.GetByID(id, params)
-	if err != nil {
-		return buildDiagNotFoundFail("notification_template", id, err)
+	if _, err := client.NotificationTemplatesService.GetByID(id, params); err != nil {
+		return utils.DiagNotFound(diagNotificationTemplateTitle, id, err)
 	}
 
-	notificationConfigurationStr := d.Get("notification_configuration").(string)
-	notificationConfigurationMap := make(map[string]interface{})
-	err = json.Unmarshal([]byte(notificationConfigurationStr), &notificationConfigurationMap)
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to create NotificationTemplate",
-			Detail:   fmt.Sprintf("error while unmarshal notification_configuration: %s", err.Error()),
-		})
-		return diags
-	}
-
-	_, err = awxService.Update(id, map[string]interface{}{
+	if _, err := awxService.Update(id, map[string]interface{}{
 		"name":                       d.Get("name").(string),
 		"description":                d.Get("description").(string),
 		"organization":               d.Get("organization_id").(string),
 		"notification_type":          d.Get("notification_type").(string),
-		"notification_configuration": notificationConfigurationMap,
-	}, map[string]string{})
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to update NotificationTemplate",
-			Detail:   fmt.Sprintf("notification_template with name %s failed to update %s", d.Get("name").(string), err.Error()),
-		})
-		return diags
+		"notification_configuration": parseNotifyConfig(d.Get("notification_configuration").(map[string]interface{})),
+	}, map[string]string{}); err != nil {
+		return utils.DiagUpdate(diagNotificationTemplateTitle, id, err)
 	}
 
 	return resourceNotificationTemplateRead(ctx, d, m)
 }
 
-func resourceNotificationTemplateRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceNotificationTemplateRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
-	awxService := client.NotificationTemplatesService
-	id, diags := convertStateIDToNummeric("Read notification_template", d)
+	id, diags := utils.StateIDToInt("Read notification_template", d)
 	if diags.HasError() {
 		return diags
 	}
 
-	res, err := awxService.GetByID(id, make(map[string]string))
+	res, err := client.NotificationTemplatesService.GetByID(id, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail("notification_template", id, err)
+		return utils.DiagNotFound(diagNotificationTemplateTitle, id, err)
 
 	}
 	d = setNotificationTemplateResourceData(d, res)
 	return nil
 }
 
-func resourceNotificationTemplateDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceNotificationTemplateDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.NotificationTemplatesService
-	id, diags := convertStateIDToNummeric(diagElementHostTitle, d)
+	id, diags := utils.StateIDToInt(diagNotificationTemplateTitle, d)
 	if diags.HasError() {
 		return diags
 	}
 
-	if _, err := awxService.Delete(id); err != nil {
-		return buildDiagDeleteFail(
-			diagElementHostTitle,
-			fmt.Sprintf("id %v, got %s ",
-				id, err.Error()))
+	if _, err := client.NotificationTemplatesService.Delete(id); err != nil {
+		return utils.DiagDelete(diagNotificationTemplateTitle, id, err)
 	}
 	d.SetId("")
 	return nil
@@ -189,4 +154,20 @@ func setNotificationTemplateResourceData(d *schema.ResourceData, r *awx.Notifica
 	}
 	d.SetId(strconv.Itoa(r.ID))
 	return d
+}
+
+func parseNotifyConfig(n map[string]interface{}) map[string]interface{} {
+	if n != nil {
+		for key, value := range n {
+			if value == "" {
+				delete(n, key)
+				continue
+			}
+			switch key {
+			case "channels":
+				n[key] = []interface{}{value}
+			}
+		}
+	}
+	return n
 }

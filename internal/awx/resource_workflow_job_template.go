@@ -36,7 +36,7 @@ func resourceWorkflowJobTemplate() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				StateFunc:   normalizeJsonYaml,
+				StateFunc:   utils.Normalize,
 				Description: "Extra variables used by Ansible in YAML or JSON format. (string, default=``)",
 			},
 			"organization_id": {
@@ -142,21 +142,18 @@ func resourceWorkflowJobTemplateCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceWorkflowJobTemplateUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
-	awxService := client.WorkflowJobTemplateService
-	id, diags := convertStateIDToNummeric("Update WorkflowJobTemplate", d)
+	id, diags := utils.StateIDToInt("Update WorkflowJobTemplate", d)
 	if diags.HasError() {
 		return diags
 	}
 
 	params := make(map[string]string)
-	_, err := awxService.GetWorkflowJobTemplateByID(id, params)
-	if err != nil {
-		return buildDiagNotFoundFail("job Workflow template", id, err)
+	if _, err := client.WorkflowJobTemplateService.GetWorkflowJobTemplateByID(id, params); err != nil {
+		return utils.DiagNotFound("job Workflow template", id, err)
 	}
 
-	_, err = awxService.UpdateWorkflowJobTemplate(id, map[string]interface{}{
+	if _, err := client.WorkflowJobTemplateService.UpdateWorkflowJobTemplate(id, map[string]interface{}{
 		"name":                     d.Get("name").(string),
 		"description":              d.Get("description").(string),
 		"organization":             d.Get("organization_id").(int),
@@ -172,50 +169,38 @@ func resourceWorkflowJobTemplateUpdate(ctx context.Context, d *schema.ResourceDa
 		"ask_limit_on_launch":      d.Get("ask_limit_on_launch").(bool),
 		"webhook_service":          d.Get("webhook_service").(string),
 		"webhook_credential":       d.Get("webhook_credential").(string),
-	}, map[string]string{})
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to update WorkflowJobTemplate",
-			Detail:   fmt.Sprintf("WorkflowJobTemplate with name %s in the project id %d failed to update %s", d.Get("name").(string), d.Get("project_id").(int), err.Error()),
-		})
-		return diags
+	}, map[string]string{}); err != nil {
+		return utils.DiagUpdate("Job Workflow template", d.Get("name").(string), err)
 	}
 
 	return resourceWorkflowJobTemplateRead(ctx, d, m)
 }
 
-func resourceWorkflowJobTemplateRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceWorkflowJobTemplateRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.WorkflowJobTemplateService
-	id, diags := convertStateIDToNummeric("Read WorkflowJobTemplate", d)
+	id, diags := utils.StateIDToInt("Read WorkflowJobTemplate", d)
 	if diags.HasError() {
 		return diags
 	}
 
-	res, err := awxService.GetWorkflowJobTemplateByID(id, make(map[string]string))
+	res, err := client.WorkflowJobTemplateService.GetWorkflowJobTemplateByID(id, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail("workflow job template", id, err)
+		return utils.DiagNotFound("workflow job template", id, err)
 
 	}
 	d = setWorkflowJobTemplateResourceData(d, res)
 	return nil
 }
 
-func resourceWorkflowJobTemplateDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceWorkflowJobTemplateDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.WorkflowJobTemplateService
-	id, diags := convertStateIDToNummeric(diagElementHostTitle, d)
+	id, diags := utils.StateIDToInt("Workflow Job Template", d)
 	if diags.HasError() {
 		return diags
 	}
 
-	if _, err := awxService.DeleteWorkflowJobTemplate(id); err != nil {
-		return buildDiagDeleteFail(
-			diagElementHostTitle,
-			fmt.Sprintf("id %v, got %s ",
-				id, err.Error()))
+	if _, err := client.WorkflowJobTemplateService.DeleteWorkflowJobTemplate(id); err != nil {
+		return utils.DiagDelete("Workflow Job Template", id, err)
 	}
 	d.SetId("")
 	return nil
@@ -265,7 +250,7 @@ func setWorkflowJobTemplateResourceData(d *schema.ResourceData, r *awx.WorkflowJ
 	if err := d.Set("webhook_credential", r.WebhookCredential); err != nil {
 		fmt.Println("Error setting webhook_credential", err)
 	}
-	if err := d.Set("variables", normalizeJsonYaml(r.ExtraVars)); err != nil {
+	if err := d.Set("variables", utils.Normalize(r.ExtraVars)); err != nil {
 		fmt.Println("Error setting variables", err)
 	}
 

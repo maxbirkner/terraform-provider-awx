@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
 func resourceInventoryGroup() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceInventoryGroup() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				StateFunc:   normalizeJsonYaml,
+				StateFunc:   utils.Normalize,
 				Description: `The variables of the group. This can be in JSON or YAML format. For example:  {"key": "value"}`,
 			},
 		},
@@ -62,7 +63,7 @@ func resourceInventoryGroupCreate(ctx context.Context, d *schema.ResourceData, m
 		"variables":   d.Get("variables").(string),
 	}, map[string]string{})
 	if err != nil {
-		return buildDiagCreateFail(diagElementInventoryGroupTitle, err)
+		return utils.DiagCreate(diagInventoryGroupTitle, err)
 	}
 
 	d.SetId(strconv.Itoa(result.ID))
@@ -72,61 +73,51 @@ func resourceInventoryGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceInventoryGroupUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.GroupService
-	id, diags := convertStateIDToNummeric(diagElementInventoryGroupTitle, d)
+	id, diags := utils.StateIDToInt(diagInventoryGroupTitle, d)
 	if diags.HasError() {
 		return diags
 	}
 
-	_, err := awxService.UpdateGroup(id, map[string]interface{}{
+	if _, err := client.GroupService.UpdateGroup(id, map[string]interface{}{
 		"name":        d.Get("name").(string),
 		"description": d.Get("description").(string),
 		"inventory":   d.Get("inventory_id").(string),
 		"variables":   d.Get("variables").(string),
-	}, nil)
-	if err != nil {
-		return buildDiagUpdateFail(diagElementInventoryGroupTitle, id, err)
+	}, nil); err != nil {
+		return utils.DiagUpdate(diagInventoryGroupTitle, id, err)
 	}
 
 	return resourceInventoryGroupRead(ctx, d, m)
 
 }
 
-func resourceInventoryGroupDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceInventoryGroupDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.GroupService
-
-	id, diags := convertStateIDToNummeric(diagElementInventoryGroupTitle, d)
+	id, diags := utils.StateIDToInt(diagInventoryGroupTitle, d)
 	if diags.HasError() {
 		return diags
 	}
 
-	if _, err := awxService.DeleteGroup(id); err != nil {
-		return buildDiagDeleteFail(
-			diagElementInventoryGroupTitle,
-			fmt.Sprintf("ID: %v, got %s ",
-				id, err.Error()))
+	if _, err := client.GroupService.DeleteGroup(id); err != nil {
+		return utils.DiagDelete(diagInventoryGroupTitle, id, err)
 	}
 	d.SetId("")
 	return nil
 }
 
-func resourceInventoryGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceInventoryGroupRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.GroupService
-
-	id, diags := convertStateIDToNummeric(diagElementInventoryGroupTitle, d)
+	id, diags := utils.StateIDToInt(diagInventoryGroupTitle, d)
 	if diags.HasError() {
 		return diags
 	}
 
-	res, err := awxService.GetGroupByID(id, make(map[string]string))
+	res, err := client.GroupService.GetGroupByID(id, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail(diagElementInventoryGroupTitle, id, err)
+		return utils.DiagFetch(diagInventoryGroupTitle, id, err)
 	}
 	d = setInventoryGroupResourceData(d, res)
-	return diags
+	return nil
 }
 
 func setInventoryGroupResourceData(d *schema.ResourceData, r *awx.Group) *schema.ResourceData {
@@ -139,7 +130,7 @@ func setInventoryGroupResourceData(d *schema.ResourceData, r *awx.Group) *schema
 	if err := d.Set("inventory_id", r.Inventory); err != nil {
 		fmt.Println("Error setting inventory_id", err)
 	}
-	if err := d.Set("variables", normalizeJsonYaml(r.Variables)); err != nil {
+	if err := d.Set("variables", utils.Normalize(r.Variables)); err != nil {
 		fmt.Println("Error setting variables", err)
 	}
 

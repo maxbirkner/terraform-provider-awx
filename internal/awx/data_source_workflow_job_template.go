@@ -7,7 +7,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagWorkflowJobTemplateTitle = "Workflow Job Template"
 
 func dataSourceWorkflowJobTemplate() *schema.Resource {
 	return &schema.Resource{
@@ -21,10 +24,11 @@ func dataSourceWorkflowJobTemplate() *schema.Resource {
 				Description: "The unique identifier of the workflow job template.",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The name of the workflow job template.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				Description:  "The name of the workflow job template.",
+				ExactlyOneOf: []string{"id", "name"},
 			},
 		},
 	}
@@ -42,19 +46,9 @@ func dataSourceWorkflowJobTemplateRead(ctx context.Context, d *schema.ResourceDa
 		params["id"] = strconv.Itoa(groupID.(int))
 	}
 
-	if len(params) == 0 {
-		return buildDiagnosticsMessage(
-			"Get: Missing Parameters",
-			"Please use one of the selectors (name or group_id)",
-		)
-	}
 	workflowJobTemplate, _, err := client.WorkflowJobTemplateService.ListWorkflowJobTemplates(params)
 	if err != nil {
-		return buildDiagnosticsMessage(
-			"Get: Fail to fetch Inventory Group",
-			"Fail to find the group got: %s",
-			err.Error(),
-		)
+		return utils.DiagFetch(diagWorkflowJobTemplateTitle, params, err)
 	}
 	if groupName, okName := d.GetOk("name"); okName {
 		for _, template := range workflowJobTemplate {
@@ -66,14 +60,14 @@ func dataSourceWorkflowJobTemplateRead(ctx context.Context, d *schema.ResourceDa
 	}
 	if _, okGroupID := d.GetOk("id"); okGroupID {
 		if len(workflowJobTemplate) > 1 {
-			return buildDiagnosticsMessage(
+			return utils.Diagf(
 				"Get: find more than one Element",
 				"The Query Returns more than one Group, %d",
 				len(workflowJobTemplate),
 			)
 		}
 		if len(workflowJobTemplate) == 0 {
-			return buildDiagnosticsMessage(
+			return utils.Diagf(
 				"Get: Workflow template does not exist",
 				"The Query Returns no Workflow template matching filter %v",
 				params,
@@ -82,7 +76,7 @@ func dataSourceWorkflowJobTemplateRead(ctx context.Context, d *schema.ResourceDa
 		d = setWorkflowJobTemplateResourceData(d, workflowJobTemplate[0])
 		return diags
 	}
-	return buildDiagnosticsMessage(
+	return utils.Diagf(
 		"Get: find more than one Element",
 		"The Query Returns more than one Group, %d",
 		len(workflowJobTemplate),

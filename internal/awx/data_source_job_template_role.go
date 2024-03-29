@@ -8,7 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagJobTemplateRole = "Job Template Role"
 
 func dataSourceJobTemplateRole() *schema.Resource {
 	return &schema.Resource{
@@ -45,11 +48,7 @@ func dataSourceJobTemplateRoleRead(ctx context.Context, d *schema.ResourceData, 
 	templateID := d.Get("job_template_id").(int)
 	jobTemplate, err := client.JobTemplateService.GetJobTemplateByID(templateID, params)
 	if err != nil {
-		return buildDiagnosticsMessage(
-			"Get: Fail to fetch Job-Template",
-			"Fail to find the job-template, got: %s",
-			err.Error(),
-		)
+		return utils.DiagFetch(diagJobTemplateRole, templateID, err)
 	}
 
 	rolesList := []*awx.ApplyRole{
@@ -82,10 +81,7 @@ func dataSourceJobTemplateRoleRead(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	return buildDiagnosticsMessage(
-		"Failed to fetch job-template role - Not Found",
-		"The project role was not found",
-	)
+	return utils.DiagNotFound(diagJobTemplateRole, templateID, nil)
 }
 
 func setJobTemplateRoleData(d *schema.ResourceData, r *awx.ApplyRole) *schema.ResourceData {

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
 func resourceSchedule() *schema.Resource {
@@ -75,7 +76,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, m inter
 		"unified_job_template": d.Get("unified_job_template_id").(int),
 		"description":          d.Get("description").(string),
 		"enabled":              d.Get("enabled").(bool),
-		"extra_data":           unmarshalYaml(d.Get("extra_data").(string)),
+		"extra_data":           utils.UnmarshalYAML(d.Get("extra_data").(string)),
 	}
 	if _, ok := d.GetOk("inventory"); ok {
 		scheduleData["inventory"] = d.Get("inventory").(int)
@@ -97,76 +98,61 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, m inter
 }
 
 func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
-	awxService := client.ScheduleService
-	id, diags := convertStateIDToNummeric("Update Schedule", d)
+	id, diags := utils.StateIDToInt("Update Schedule", d)
 	if diags.HasError() {
 		return diags
 	}
 
 	params := make(map[string]string)
-	_, err := awxService.GetByID(id, params)
-	if err != nil {
-		return buildDiagNotFoundFail("schedule", id, err)
+	if _, err := client.ScheduleService.GetByID(id, params); err != nil {
+		return utils.DiagNotFound("Schedule", id, err)
 	}
 
-	scheduleData := map[string]interface{}{
+	payload := map[string]interface{}{
 		"name":                 d.Get("name").(string),
 		"rrule":                d.Get("rrule").(string),
 		"unified_job_template": d.Get("unified_job_template_id").(int),
 		"description":          d.Get("description").(string),
 		"enabled":              d.Get("enabled").(bool),
-		"extra_data":           unmarshalYaml(d.Get("extra_data").(string)),
+		"extra_data":           utils.UnmarshalYAML(d.Get("extra_data").(string)),
 	}
 	if _, ok := d.GetOk("inventory"); ok {
-		scheduleData["inventory"] = d.Get("inventory").(int)
+		payload["inventory"] = d.Get("inventory").(int)
 	}
 
-	_, err = awxService.Update(id, scheduleData, map[string]string{})
-	if err != nil {
-		diags = append(diags, diag.Diagnostic{
-			Severity: diag.Error,
-			Summary:  "Unable to update Schedule",
-			Detail:   fmt.Sprintf("Schedule with name %s failed to update %s", d.Get("name").(string), err.Error()),
-		})
-		return diags
+	if _, err := client.ScheduleService.Update(id, payload, map[string]string{}); err != nil {
+		return utils.DiagUpdate("Schedule", id, err)
 	}
 
 	return resourceScheduleRead(ctx, d, m)
 }
 
-func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceScheduleRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.ScheduleService
-	id, diags := convertStateIDToNummeric("Read schedule", d)
+	id, diags := utils.StateIDToInt("Read schedule", d)
 	if diags.HasError() {
 		return diags
 	}
 
-	res, err := awxService.GetByID(id, make(map[string]string))
+	res, err := client.ScheduleService.GetByID(id, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail("schedule", id, err)
+		return utils.DiagNotFound("Schedule", id, err)
 
 	}
 	d = setScheduleResourceData(d, res)
 	return nil
 }
 
-func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceScheduleDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.ScheduleService
-	id, diags := convertStateIDToNummeric(diagElementHostTitle, d)
+	id, diags := utils.StateIDToInt(diagHostTitle, d)
 	if diags.HasError() {
 		return diags
 	}
 
-	if _, err := awxService.Delete(id); err != nil {
-		return buildDiagDeleteFail(
-			diagElementHostTitle,
-			fmt.Sprintf("id %v, got %s ",
-				id, err.Error()))
+	if _, err := client.ScheduleService.Delete(id); err != nil {
+		return utils.DiagDelete("Schedule", id, err)
 	}
 	d.SetId("")
 	return nil
@@ -191,7 +177,7 @@ func setScheduleResourceData(d *schema.ResourceData, r *awx.Schedule) *schema.Re
 	if err := d.Set("inventory", r.Inventory); err != nil {
 		fmt.Println("Error setting inventory", err)
 	}
-	if err := d.Set("extra_data", marshalYaml(r.ExtraData)); err != nil {
+	if err := d.Set("extra_data", utils.MarshalYAML(r.ExtraData)); err != nil {
 		fmt.Println("Error setting extra_data", err)
 	}
 	d.SetId(strconv.Itoa(r.ID))

@@ -9,7 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagSettingsTitle = "Settings Configration"
 
 var ldapTeamMapAccessMutex sync.Mutex
 
@@ -59,13 +62,13 @@ func resourceSettingsLDAPTeamMap() *schema.Resource {
 	}
 }
 
-type team_map_entry struct {
+type teamMapEntry struct {
 	UserDNs      interface{} `json:"users"`
 	Organization string      `json:"organization"`
 	Remove       bool        `json:"remove"`
 }
 
-type teammap map[string]team_map_entry
+type teamMap map[string]teamMapEntry
 
 func resourceSettingsLDAPTeamMapCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
@@ -73,54 +76,45 @@ func resourceSettingsLDAPTeamMapCreate(ctx context.Context, d *schema.ResourceDa
 	defer ldapTeamMapAccessMutex.Unlock()
 
 	client := m.(*awx.AWX)
-	awxService := client.SettingService
-
-	res, err := awxService.GetSettingsBySlug("ldap", make(map[string]string))
+	res, err := client.SettingService.GetSettingsBySlug("ldap", make(map[string]string))
 	if err != nil {
-		return buildDiagnosticsMessage(
-			"Create: failed to fetch settings",
-			"Failed to fetch any ldap setting, got: %s", err.Error(),
-		)
+		return utils.DiagCreate(diagSettingsTitle, err)
 	}
 
 	/*return buildDiagnosticsMessage(
 		"returning as desired",
 		"Data: %v", res,
 	)*/
-	tmaps := make(teammap)
-	err = json.Unmarshal((*res)["AUTH_LDAP_TEAM_MAP"], &tmaps)
-	if err != nil {
-		return buildDiagnosticsMessage(
+	tMaps := make(teamMap)
+	if err = json.Unmarshal((*res)["AUTH_LDAP_TEAM_MAP"], &tMaps); err != nil {
+		return utils.Diagf(
 			"Create: failed to parse AUTH_LDAP_TEAM_MAP setting",
 			"Failed to parse AUTH_LDAP_TEAM_MAP setting, got: %s with input %s", err.Error(), (*res)["AUTH_LDAP_TEAM_MAP"],
 		)
 	}
 
 	name := d.Get("name").(string)
-
-	_, ok := tmaps[name]
-	if ok {
-		return buildDiagnosticsMessage(
+	if _, ok := tMaps[name]; ok {
+		return utils.Diagf(
 			"Create: team map already exists",
 			"Map for ldap to team map %v already exists", d.Id(),
 		)
 	}
 
-	newtmap := team_map_entry{
+	newTMap := teamMapEntry{
 		UserDNs:      d.Get("users").([]interface{}),
 		Organization: d.Get("organization").(string),
 		Remove:       d.Get("remove").(bool),
 	}
 
-	tmaps[name] = newtmap
+	tMaps[name] = newTMap
 
 	payload := map[string]interface{}{
-		"AUTH_LDAP_TEAM_MAP": tmaps,
+		"AUTH_LDAP_TEAM_MAP": tMaps,
 	}
 
-	_, err = awxService.UpdateSettings("ldap", payload, make(map[string]string))
-	if err != nil {
-		return buildDiagnosticsMessage(
+	if _, err = client.SettingService.UpdateSettings("ldap", payload, make(map[string]string)); err != nil {
+		return utils.Diagf(
 			"Create: team map not created",
 			"failed to save team map data, got: %s", err.Error(),
 		)
@@ -136,20 +130,18 @@ func resourceSettingsLDAPTeamMapUpdate(ctx context.Context, d *schema.ResourceDa
 	defer ldapTeamMapAccessMutex.Unlock()
 
 	client := m.(*awx.AWX)
-	awxService := client.SettingService
-
-	res, err := awxService.GetSettingsBySlug("ldap", make(map[string]string))
+	res, err := client.SettingService.GetSettingsBySlug("ldap", make(map[string]string))
 	if err != nil {
-		return buildDiagnosticsMessage(
+		return utils.Diagf(
 			"Update: Unable to fetch settings",
 			"Unable to load settings with slug ldap: got %s", err.Error(),
 		)
 	}
 
-	tmaps := make(teammap)
-	err = json.Unmarshal((*res)["AUTH_LDAP_TEAM_MAP"], &tmaps)
+	tMaps := make(teamMap)
+	err = json.Unmarshal((*res)["AUTH_LDAP_TEAM_MAP"], &tMaps)
 	if err != nil {
-		return buildDiagnosticsMessage(
+		return utils.Diagf(
 			"Update: failed to parse AUTH_LDAP_TEAM_MAP setting",
 			"Failed to parse AUTH_LDAP_TEAM_MAP setting, got: %s", err.Error(),
 		)
@@ -162,23 +154,22 @@ func resourceSettingsLDAPTeamMapUpdate(ctx context.Context, d *schema.ResourceDa
 	remove := d.Get("remove").(bool)
 
 	if name != id {
-		tmaps[name] = tmaps[id]
-		delete(tmaps, id)
+		tMaps[name] = tMaps[id]
+		delete(tMaps, id)
 	}
 
-	utmap := tmaps[name]
-	utmap.UserDNs = users
-	utmap.Organization = organization
-	utmap.Remove = remove
-	tmaps[name] = utmap
+	utMap := tMaps[name]
+	utMap.UserDNs = users
+	utMap.Organization = organization
+	utMap.Remove = remove
+	tMaps[name] = utMap
 
 	payload := map[string]interface{}{
-		"AUTH_LDAP_TEAM_MAP": tmaps,
+		"AUTH_LDAP_TEAM_MAP": tMaps,
 	}
 
-	_, err = awxService.UpdateSettings("ldap", payload, make(map[string]string))
-	if err != nil {
-		return buildDiagnosticsMessage(
+	if _, err = client.SettingService.UpdateSettings("ldap", payload, make(map[string]string)); err != nil {
+		return utils.Diagf(
 			"Update: team map not created",
 			"failed to save team map data, got: %s", err.Error(),
 		)
@@ -188,33 +179,27 @@ func resourceSettingsLDAPTeamMapUpdate(ctx context.Context, d *schema.ResourceDa
 	return resourceSettingsLDAPTeamMapRead(ctx, d, m)
 }
 
-func resourceSettingsLDAPTeamMapRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func resourceSettingsLDAPTeamMapRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.SettingService
-
-	res, err := awxService.GetSettingsBySlug("ldap", make(map[string]string))
+	res, err := client.SettingService.GetSettingsBySlug("ldap", make(map[string]string))
 	if err != nil {
-		return buildDiagnosticsMessage(
+		return utils.Diagf(
 			"Unable to fetch settings",
 			"Unable to load settings with slug ldap: got %s",
 			err.Error(),
 		)
 	}
-	tmaps := make(teammap)
-	err = json.Unmarshal((*res)["AUTH_LDAP_TEAM_MAP"], &tmaps)
+	tMaps := make(teamMap)
+	err = json.Unmarshal((*res)["AUTH_LDAP_TEAM_MAP"], &tMaps)
 	if err != nil {
-		return buildDiagnosticsMessage(
+		return utils.Diagf(
 			"Unable to parse AUTH_LDAP_TEAM_MAP",
 			"Unable to parse AUTH_LDAP_TEAM_MAP, got: %s", err.Error(),
 		)
 	}
-	mapdef, ok := tmaps[d.Id()]
+	mapdef, ok := tMaps[d.Id()]
 	if !ok {
-		return buildDiagnosticsMessage(
-			"Unable to fetch ldap team map",
-			"Unable to load ldap team map %v: not found", d.Id(),
-		)
+		return utils.DiagFetch("team map", d.Id(), nil)
 	}
 
 	/*return buildDiagnosticsMessage(
@@ -248,32 +233,29 @@ func resourceSettingsLDAPTeamMapRead(ctx context.Context, d *schema.ResourceData
 	if err := d.Set("remove", mapdef.Remove); err != nil {
 		return diag.FromErr(err)
 	}
-	return diags
+	return nil
 }
 
-func resourceSettingsLDAPTeamMapDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-
+func resourceSettingsLDAPTeamMapDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	ldapTeamMapAccessMutex.Lock()
 	defer ldapTeamMapAccessMutex.Unlock()
 
-	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
-	awxService := client.SettingService
 
-	res, err := awxService.GetSettingsBySlug("ldap", make(map[string]string))
+	res, err := client.SettingService.GetSettingsBySlug("ldap", make(map[string]string))
 	if err != nil {
-		return buildDiagnosticsMessage(
+		return utils.Diagf(
 			"Delete: Unable to fetch settings",
-			"Unable to load settings with slug ldap: got %s", err.Error(),
+			"Unable to load settings with slug ldap: got %s", err,
 		)
 	}
 
-	tmaps := make(teammap)
+	tmaps := make(teamMap)
 	err = json.Unmarshal((*res)["AUTH_LDAP_TEAM_MAP"], &tmaps)
 	if err != nil {
-		return buildDiagnosticsMessage(
+		return utils.Diagf(
 			"Delete: failed to parse AUTH_LDAP_TEAM_MAP setting",
-			"Failed to parse AUTH_LDAP_TEAM_MAP setting, got: %s", err.Error(),
+			"Failed to parse AUTH_LDAP_TEAM_MAP setting, got: %s", err,
 		)
 	}
 
@@ -284,13 +266,9 @@ func resourceSettingsLDAPTeamMapDelete(ctx context.Context, d *schema.ResourceDa
 		"AUTH_LDAP_TEAM_MAP": tmaps,
 	}
 
-	_, err = awxService.UpdateSettings("ldap", payload, make(map[string]string))
-	if err != nil {
-		return buildDiagnosticsMessage(
-			"Delete: team map not created",
-			"failed to save team map data, got: %s", err.Error(),
-		)
+	if _, err = client.SettingService.UpdateSettings("ldap", payload, make(map[string]string)); err != nil {
+		return utils.DiagDelete("team map", id, err)
 	}
 	d.SetId("")
-	return diags
+	return nil
 }

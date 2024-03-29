@@ -8,7 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
+
+const diagHostTitle = "Host"
 
 func resourceHost() *schema.Resource {
 	return &schema.Resource{
@@ -57,7 +60,7 @@ func resourceHost() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Default:     "",
-				StateFunc:   normalizeJsonYaml,
+				StateFunc:   utils.Normalize,
 				Description: "The variables of the host",
 			},
 		},
@@ -81,7 +84,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, m interface
 		"variables":   d.Get("variables").(string),
 	}, map[string]string{})
 	if err != nil {
-		return buildDiagCreateFail(diagElementHostTitle, err)
+		return utils.DiagCreate(diagHostTitle, err)
 	}
 
 	hostID := result.ID
@@ -89,15 +92,10 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, m interface
 		rawGroups := d.Get("group_ids").([]interface{})
 		for _, v := range rawGroups {
 
-			_, err := awxService.AssociateGroup(hostID, map[string]interface{}{
+			if _, err := awxService.AssociateGroup(hostID, map[string]interface{}{
 				"id": v.(int),
-			}, map[string]string{})
-			if err != nil {
-				return buildDiagnosticsMessage(
-					diagElementHostTitle,
-					"Assign Group Id %v to hostid %v fail, got  %s",
-					v, hostID, err.Error(),
-				)
+			}, map[string]string{}); err != nil {
+				return utils.Diagf(diagHostTitle, "Assign Group Id %v to hostid %v fail, got  %s", v, hostID, err)
 			}
 		}
 	}
@@ -107,37 +105,31 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.HostService
-	id, diags := convertStateIDToNummeric(diagElementHostTitle, d)
+	id, diags := utils.StateIDToInt(diagHostTitle, d)
 	if diags.HasError() {
 		return diags
 	}
 
-	_, err := awxService.UpdateHost(id, map[string]interface{}{
+	if _, err := client.HostService.UpdateHost(id, map[string]interface{}{
 		"name":        d.Get("name").(string),
 		"description": d.Get("description").(string),
 		"inventory":   d.Get("inventory_id").(int),
 		"enabled":     d.Get("enabled").(bool),
 		"instance_id": d.Get("instance_id").(string),
 		"variables":   d.Get("variables").(string),
-	}, nil)
-	if err != nil {
-		return buildDiagUpdateFail(diagElementHostTitle, id, err)
+	}, nil); err != nil {
+		return utils.DiagUpdate(diagHostTitle, id, err)
 	}
 
 	if d.HasChange("group_ids") {
 		// TODO Check whats happen with removin groups ....
 		rawGroups := d.Get("group_ids").([]interface{})
 		for _, v := range rawGroups {
-			_, err := awxService.AssociateGroup(id, map[string]interface{}{
+			_, err := client.HostService.AssociateGroup(id, map[string]interface{}{
 				"id": v.(int),
 			}, map[string]string{})
 			if err != nil {
-				return buildDiagnosticsMessage(
-					diagElementHostTitle,
-					"Assign Group Id %v to hostid %v fail, got  %s",
-					v, id, err.Error(),
-				)
+				return utils.Diagf(diagHostTitle, "Assign Group Id %v to hostid %v fail, got  %s", v, id, err)
 			}
 		}
 	}
@@ -145,34 +137,29 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 }
 
-func resourceHostRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceHostRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.HostService
-	id, diags := convertStateIDToNummeric(diagElementHostTitle, d)
+	id, diags := utils.StateIDToInt(diagHostTitle, d)
 	if diags.HasError() {
 		return diags
 	}
-	res, err := awxService.GetHostByID(id, make(map[string]string))
+	res, err := client.HostService.GetHostByID(id, make(map[string]string))
 	if err != nil {
-		return buildDiagNotFoundFail(diagElementHostTitle, id, err)
+		return utils.DiagNotFound(diagHostTitle, id, err)
 	}
 	d = setHostResourceData(d, res)
 	return nil
 }
 
-func resourceHostDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceHostDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	awxService := client.HostService
-	id, diags := convertStateIDToNummeric(diagElementHostTitle, d)
+	id, diags := utils.StateIDToInt(diagHostTitle, d)
 	if diags.HasError() {
 		return diags
 	}
 
-	if _, err := awxService.DeleteHost(id); err != nil {
-		return buildDiagDeleteFail(
-			diagElementHostTitle,
-			fmt.Sprintf("id %v, got %s ",
-				id, err.Error()))
+	if _, err := client.HostService.DeleteHost(id); err != nil {
+		return utils.DiagDelete(diagHostTitle, id, err)
 	}
 	d.SetId("")
 	return nil
@@ -194,7 +181,7 @@ func setHostResourceData(d *schema.ResourceData, r *awx.Host) *schema.ResourceDa
 	if err := d.Set("instance_id", r.InstanceID); err != nil {
 		fmt.Println("Error setting instance_id", err)
 	}
-	if err := d.Set("variables", normalizeJsonYaml(r.Variables)); err != nil {
+	if err := d.Set("variables", utils.Normalize(r.Variables)); err != nil {
 		fmt.Println("Error setting variables", err)
 	}
 	if err := d.Set("group_ids", d.Get("group_ids").([]interface{})); err != nil {
