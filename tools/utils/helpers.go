@@ -77,7 +77,7 @@ func StateIDToInt(tfElement string, d *schema.ResourceData) (int, diag.Diagnosti
 	if err != nil {
 		return id, Diagf(
 			fmt.Sprintf("%s, State ID Not Converted", tfElement),
-			"Value in State %s is`t nummeric, %s", d.Id(), err,
+			"Value in State %s is not numeric, %s", d.Id(), err,
 		)
 	}
 	return id, diags

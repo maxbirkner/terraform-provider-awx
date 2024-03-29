@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -76,12 +77,6 @@ func resourceNotificationTemplate() *schema.Resource {
 	}
 }
 
-type notifyMessage struct {
-	Started map[string]interface{} `json:"started,omitempty"`
-	Success map[string]interface{} `json:"success,omitempty"`
-	Error   map[string]interface{} `json:"error,omitempty"`
-}
-
 func resourceNotificationTemplateCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
 	payload := map[string]interface{}{
@@ -101,6 +96,7 @@ func resourceNotificationTemplateCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.SetId(strconv.Itoa(result.ID))
+	time.Sleep(time.Second * 3)
 	return resourceNotificationTemplateRead(ctx, d, m)
 }
 
@@ -129,12 +125,11 @@ func resourceNotificationTemplateUpdate(ctx context.Context, d *schema.ResourceD
 	if _, err := client.NotificationTemplatesService.Update(id, payload, map[string]string{}); err != nil {
 		return utils.DiagUpdate(diagNotificationTemplateTitle, id, err)
 	}
-
+	time.Sleep(time.Second * 3)
 	return resourceNotificationTemplateRead(ctx, d, m)
 }
 
 func resourceNotificationTemplateRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
 	id, diags := utils.StateIDToInt("Read notification_template", d)
 	if diags.HasError() {
