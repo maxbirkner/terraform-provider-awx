@@ -157,16 +157,14 @@ func setNotificationTemplateResourceData(d *schema.ResourceData, r *awx.Notifica
 }
 
 func parseNotifyConfig(n map[string]interface{}) map[string]interface{} {
-	if n != nil {
-		for key, value := range n {
-			if value == "" {
-				delete(n, key)
-				continue
-			}
-			switch key {
-			case "channels":
-				n[key] = []interface{}{value}
-			}
+	for key, value := range n {
+		if value == "" {
+			delete(n, key)
+			continue
+		}
+		switch key {
+		case "channels":
+			n[key] = []interface{}{value}
 		}
 	}
 	return n

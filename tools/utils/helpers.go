@@ -127,18 +127,14 @@ func NormalizeYamlOk(s interface{}) (string, bool) {
 		return "", true
 	}
 	var j interface{}
-	switch s.(type) {
-	case string:
-		if err := yaml.Unmarshal([]byte(s.(string)), &j); err != nil {
-			return fmt.Sprintf("Error parsing YAML: %s", err), false
-		}
-		b, err := yaml.Marshal(j)
-		if err != nil {
-			return fmt.Sprintf("Error parsing YAML: %s", err), false
-		}
-		return string(b[:]), true
+	if err := yaml.Unmarshal([]byte(s.(string)), &j); err != nil {
+		return fmt.Sprintf("Error parsing YAML: %s", err), false
 	}
-	return "", false
+	b, err := yaml.Marshal(j)
+	if err != nil {
+		return fmt.Sprintf("Error parsing YAML: %s", err), false
+	}
+	return string(b[:]), true
 }
 
 func UnmarshalYAML(str string) map[string]interface{} {
