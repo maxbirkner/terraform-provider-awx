@@ -1,3 +1,17 @@
+# [1.0.8](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.0.7...v1.0.8) (2024-04-06)
+
+Thank you! @NikolayDupak
+
+### Changes:
+
+ * type for 'inputs' field, from string to map[string]interface{}
+* removed unmarshal for 'inputs' field
+
+### Fixes:
+
+* used correct return function in 'resourceCredentialUpdate', changed from 'resourceCredentialSCMRead' to 'resourceCredentialRead'
+
+
 # [1.0.0](https://github.com/josh-silvas/terraform-provider-awx/compare/v0.25.2...v0.26.0) (2024-03-27)
 
 
