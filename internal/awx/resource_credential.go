@@ -2,7 +2,6 @@ package awx
 
 import (
 	"context"
-	"encoding/json"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -42,7 +41,7 @@ func resourceCredential() *schema.Resource {
 				Description: "Specify the type of credential you want to create. Refer to the Ansible Tower documentation for details on each type",
 			},
 			"inputs": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeMap,
 				Required:    true,
 				Sensitive:   true,
 				Description: "The inputs to be created with the credential.",
@@ -52,11 +51,7 @@ func resourceCredential() *schema.Resource {
 }
 
 func resourceCredentialCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	inputs := d.Get("inputs").(string)
-	inputsMap := make(map[string]interface{})
-	if err := json.Unmarshal([]byte(inputs), &inputsMap); err != nil {
-		return utils.DiagCreate(diagCredentialTitle, err)
-	}
+	inputsMap := d.Get("inputs")
 
 	payload := map[string]interface{}{
 		"name":            d.Get("name").(string),
@@ -115,11 +110,7 @@ func resourceCredentialUpdate(ctx context.Context, d *schema.ResourceData, m int
 	if d.HasChanges(keys...) {
 		var err error
 
-		inputs := d.Get("inputs").(string)
-		inputsMap := make(map[string]interface{})
-		if err := json.Unmarshal([]byte(inputs), &inputsMap); err != nil {
-			return utils.DiagUpdate(diagCredentialTitle, d.Id(), err)
-		}
+		inputsMap := d.Get("inputs")
 
 		id, err := strconv.Atoi(d.Id())
 		if err != nil {
@@ -139,7 +130,7 @@ func resourceCredentialUpdate(ctx context.Context, d *schema.ResourceData, m int
 		}
 	}
 
-	return resourceCredentialSCMRead(ctx, d, m)
+	return resourceCredentialRead(ctx, d, m)
 }
 
 func resourceCredentialDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
