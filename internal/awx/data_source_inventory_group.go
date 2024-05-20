@@ -39,7 +39,7 @@ func dataSourceInventoryGroup() *schema.Resource {
 	}
 }
 
-func dataSourceInventoryGroupRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceInventoryGroupRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
 	params := make(map[string]string)

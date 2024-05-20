@@ -94,7 +94,7 @@ func resourceCredentialSCMCreate(ctx context.Context, d *schema.ResourceData, m 
 	return diags
 }
 
-func resourceCredentialSCMRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialSCMRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	client := m.(*awx.AWX)

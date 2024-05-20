@@ -180,7 +180,7 @@ func (jt *JobTemplateService) DeleteJobTemplate(id int) (*JobTemplate, error) {
 }
 
 // DisAssociateCredentials remove Credentials form an awx job template.
-func (jt *JobTemplateService) DisAssociateCredentials(id int, data map[string]interface{}, params map[string]string) (*JobTemplate, error) {
+func (jt *JobTemplateService) DisAssociateCredentials(id int, data map[string]interface{}, _ map[string]string) (*JobTemplate, error) {
 	result := new(JobTemplate)
 	endpoint := fmt.Sprintf("%s%d/credentials/", jobTemplateAPIEndpoint, id)
 	data["disassociate"] = true
@@ -214,7 +214,7 @@ func (jt *JobTemplateService) DisAssociateCredentials(id int, data map[string]in
 }
 
 // AssociateCredentials  adding credentials to JobTemplate.
-func (jt *JobTemplateService) AssociateCredentials(id int, data map[string]interface{}, params map[string]string) (*JobTemplate, error) {
+func (jt *JobTemplateService) AssociateCredentials(id int, data map[string]interface{}, _ map[string]string) (*JobTemplate, error) {
 	result := new(JobTemplate)
 
 	endpoint := fmt.Sprintf("%s%d/credentials/", jobTemplateAPIEndpoint, id)

@@ -105,7 +105,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, m interface
 	return resourceUserRead(ctx, d, m)
 }
 
-func roleUserEntitlementUpdate(m interface{}, user_id int, roles []interface{}, remove bool) error {
+func roleUserEntitlementUpdate(m interface{}, userID int, roles []interface{}, remove bool) error {
 	client := m.(*awx.AWX)
 	awxService := client.UserService
 
@@ -118,7 +118,7 @@ func roleUserEntitlementUpdate(m interface{}, user_id int, roles []interface{}, 
 			payload["disassociate"] = true // presence of key triggers removal
 		}
 
-		_, err := awxService.UpdateUserRoleEntitlement(user_id, payload, make(map[string]string))
+		_, err := awxService.UpdateUserRoleEntitlement(userID, payload, make(map[string]string))
 		if err != nil {
 			return err
 		}

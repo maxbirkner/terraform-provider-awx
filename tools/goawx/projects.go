@@ -102,7 +102,7 @@ func (p *ProjectService) CreateProject(data map[string]interface{}, params map[s
 }
 
 // UpdateProject update an awx Project.
-func (p *ProjectService) UpdateProject(id int, data map[string]interface{}, params map[string]string) (*Project, error) {
+func (p *ProjectService) UpdateProject(id int, data map[string]interface{}, _ map[string]string) (*Project, error) {
 	result := new(Project)
 	endpoint := fmt.Sprintf("%s%d", projectsAPIEndpoint, id)
 	payload, err := json.Marshal(data)

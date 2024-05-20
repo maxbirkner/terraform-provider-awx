@@ -86,7 +86,7 @@ func resourceCredentialGalaxyCreate(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceCredentialGalaxyRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialGalaxyRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	client := m.(*awx.AWX)

@@ -49,7 +49,7 @@ func dataSourceCredentialTypeByID() *schema.Resource {
 	}
 }
 
-func dataSourceCredentialTypeByIDRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceCredentialTypeByIDRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	client := m.(*awx.AWX)

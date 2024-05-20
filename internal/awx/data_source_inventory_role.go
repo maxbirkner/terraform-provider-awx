@@ -40,7 +40,7 @@ func dataSourceInventoryRole() *schema.Resource {
 	}
 }
 
-func dataSourceInventoryRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceInventoryRoleRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
 	params := make(map[string]string)

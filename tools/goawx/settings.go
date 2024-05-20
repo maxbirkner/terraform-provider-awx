@@ -65,7 +65,7 @@ func (p *SettingService) GetSettingsBySlug(slug string, params map[string]string
 }
 
 // UpdateSettings update an awx Setting.
-func (p *SettingService) UpdateSettings(slug string, data map[string]interface{}, params map[string]string) (*Setting, error) {
+func (p *SettingService) UpdateSettings(slug string, data map[string]interface{}, _ map[string]string) (*Setting, error) {
 	result := new(Setting)
 	endpoint := fmt.Sprintf("%s%s", settingsAPIEndpoint, slug)
 	payload, err := json.Marshal(data)

@@ -120,7 +120,7 @@ func resourceCredentialMachineCreate(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func resourceCredentialMachineRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialMachineRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	client := m.(*awx.AWX)

@@ -1,3 +1,4 @@
+// Package main is the entry point for the plugin. It sets up the provider and starts the plugin.
 package main
 
 import (

@@ -108,7 +108,7 @@ func (h *HostService) CreateHost(data map[string]interface{}, params map[string]
 }
 
 // UpdateHost update an awx Host.
-func (h *HostService) UpdateHost(id int, data map[string]interface{}, params map[string]string) (*Host, error) {
+func (h *HostService) UpdateHost(id int, data map[string]interface{}, _ map[string]string) (*Host, error) {
 	result := new(Host)
 	endpoint := fmt.Sprintf("%s%d", hostsAPIEndpoint, id)
 	payload, err := json.Marshal(data)
@@ -135,7 +135,7 @@ func (h *HostService) UpdateHost(id int, data map[string]interface{}, params map
 }
 
 // AssociateGroup update an awx Host.
-func (h *HostService) AssociateGroup(id int, data map[string]interface{}, params map[string]string) (*Host, error) {
+func (h *HostService) AssociateGroup(id int, data map[string]interface{}, _ map[string]string) (*Host, error) {
 	result := new(Host)
 	endpoint := fmt.Sprintf("%s%d/groups/", hostsAPIEndpoint, id)
 	data["associate"] = true
@@ -169,7 +169,7 @@ func (h *HostService) AssociateGroup(id int, data map[string]interface{}, params
 }
 
 // DisAssociateGroup update an awx Host.
-func (h *HostService) DisAssociateGroup(id int, data map[string]interface{}, params map[string]string) (*Host, error) {
+func (h *HostService) DisAssociateGroup(id int, data map[string]interface{}, _ map[string]string) (*Host, error) {
 	result := new(Host)
 	endpoint := fmt.Sprintf("%s%d/groups/", hostsAPIEndpoint, id)
 	data["disassociate"] = true

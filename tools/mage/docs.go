@@ -1,3 +1,4 @@
+// Package mage provides a simple way to run go code with Makefile like commands
 package mage
 
 import (
@@ -24,7 +25,8 @@ const (
 	docRoot        = "../docs"
 )
 
-func GenerateProviderCoumentation() error {
+// GenerateProviderDocumentation generate provider documentation
+func GenerateProviderDocumentation() error {
 	log.Printf("some test")
 
 	provider := awx.Provider()
@@ -154,7 +156,7 @@ func genDoc(dtype, fpath, name string, resource *schema.Resource) {
 		dtypePath = "resources"
 	}
 	fname = fmt.Sprintf("%s/%s/%s.md", docRoot, dtypePath, data["resource"])
-	fd, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	fd, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644) // nolint: gosec
 	if err != nil {
 		log.Printf("[FAIL!]open file %s failed: %s", fname, err)
 		return

@@ -23,5 +23,5 @@ func resourceWorkflowJobTemplateNodeSuccessCreate(ctx context.Context, d *schema
 
 	client := m.(*awx.AWX)
 	awxService := client.WorkflowJobTemplateNodeSuccessService
-	return createNodeForWorkflowJob(awxService, ctx, d, m)
+	return createNodeForWorkflowJob(ctx, awxService, d, m)
 }

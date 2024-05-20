@@ -100,7 +100,7 @@ func (p *InstanceGroupsService) CreateInstanceGroup(data map[string]interface{},
 }
 
 // UpdateInstanceGroup update an awx InstanceGroup.
-func (p *InstanceGroupsService) UpdateInstanceGroup(id int, data map[string]interface{}, params map[string]string) (*InstanceGroup, error) {
+func (p *InstanceGroupsService) UpdateInstanceGroup(id int, data map[string]interface{}, _ map[string]string) (*InstanceGroup, error) {
 	result := new(InstanceGroup)
 	endpoint := fmt.Sprintf("%s%d", InstanceGroupsAPIEndpoint, id)
 	payload, err := json.Marshal(data)

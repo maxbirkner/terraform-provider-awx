@@ -79,7 +79,7 @@ func resourceCredentialInputSourceCreate(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func resourceCredentialInputSourceRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialInputSourceRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	client := m.(*awx.AWX)
@@ -151,7 +151,7 @@ func resourceCredentialInputSourceUpdate(ctx context.Context, d *schema.Resource
 	return resourceCredentialInputSourceRead(ctx, d, m)
 }
 
-func resourceCredentialInputSourceDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialInputSourceDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	id, _ := strconv.Atoi(d.Id())

@@ -99,7 +99,7 @@ func (s *SchedulesService) Create(data map[string]interface{}, params map[string
 }
 
 // Update update an awx schedule.
-func (s *SchedulesService) Update(id int, data map[string]interface{}, params map[string]string) (*Schedule, error) {
+func (s *SchedulesService) Update(id int, data map[string]interface{}, _ map[string]string) (*Schedule, error) {
 	result := new(Schedule)
 	endpoint := fmt.Sprintf("%s%d", schedulesAPIEndpoint, id)
 	payload, err := json.Marshal(data)

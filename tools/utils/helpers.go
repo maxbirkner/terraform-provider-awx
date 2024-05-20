@@ -137,6 +137,7 @@ func NormalizeYamlOk(s interface{}) (string, bool) {
 	return string(b[:]), true
 }
 
+// UnmarshalYAML : Unmarshal the YAML string to map[string]interface{}
 func UnmarshalYAML(str string) map[string]interface{} {
 	asMap := map[string]interface{}{}
 	err := yaml.Unmarshal([]byte(str), &asMap)
@@ -146,6 +147,7 @@ func UnmarshalYAML(str string) map[string]interface{} {
 	return asMap
 }
 
+// MarshalYAML : Marshal the interface{} to YAML string
 func MarshalYAML(v interface{}) string {
 	extraDataBytes, err := yaml.Marshal(v)
 	if err != nil {

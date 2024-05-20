@@ -10,6 +10,7 @@ import (
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
 )
 
+// Provider returns a schema.Provider for AWX.
 func Provider() *schema.Provider { //nolint:funlen
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
@@ -109,7 +110,7 @@ func Provider() *schema.Provider { //nolint:funlen
 	}
 }
 
-func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+func providerConfigure(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	hostname := d.Get("hostname").(string)
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)

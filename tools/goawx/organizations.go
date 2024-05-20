@@ -87,7 +87,7 @@ func (p *OrganizationsService) CreateOrganization(data map[string]interface{}, p
 }
 
 // UpdateOrganization update an awx Organization.
-func (p *OrganizationsService) UpdateOrganization(id int, data map[string]interface{}, params map[string]string) (*Organization, error) {
+func (p *OrganizationsService) UpdateOrganization(id int, data map[string]interface{}, _ map[string]string) (*Organization, error) {
 	result := new(Organization)
 	endpoint := fmt.Sprintf("%s%d", organizationsAPIEndpoint, id)
 	payload, err := json.Marshal(data)
@@ -138,7 +138,7 @@ func (p *OrganizationsService) DeleteOrganization(id int) (*Organization, error)
 }
 
 // DisAssociateGalaxyCredentials remove Credentials form an awx job template.
-func (p *OrganizationsService) DisAssociateGalaxyCredentials(id int, data map[string]interface{}, params map[string]string) (*Organization, error) {
+func (p *OrganizationsService) DisAssociateGalaxyCredentials(id int, data map[string]interface{}, _ map[string]string) (*Organization, error) {
 	result := new(Organization)
 	endpoint := fmt.Sprintf("%s%d/galaxy_credentials/", organizationsAPIEndpoint, id)
 	data["disassociate"] = true
@@ -172,7 +172,7 @@ func (p *OrganizationsService) DisAssociateGalaxyCredentials(id int, data map[st
 }
 
 // AssociateGalaxyCredentials adding credentials to Organization.
-func (p *OrganizationsService) AssociateGalaxyCredentials(id int, data map[string]interface{}, params map[string]string) (*Organization, error) {
+func (p *OrganizationsService) AssociateGalaxyCredentials(id int, data map[string]interface{}, _ map[string]string) (*Organization, error) {
 	result := new(Organization)
 
 	endpoint := fmt.Sprintf("%s%d/galaxy_credentials/", organizationsAPIEndpoint, id)
