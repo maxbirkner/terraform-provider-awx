@@ -2,17 +2,16 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - deadcode
     - errcheck
     - gochecknoinits
     - gocyclo
     - gofmt
     - goimports
-    - golint
+    - revive
     - gosec
     - gosimple
     - govet
-    - scopelint
+    - exportloopref
     - unconvert
     - unused
     - asciicheck
