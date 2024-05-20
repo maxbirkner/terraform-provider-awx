@@ -34,7 +34,6 @@ tag: ## Tag and push the version defined in VERSION file
 # -------------------------------------------------------------------------------------------
 _lint: ## Run golangci-lint on all sub-packages
 	@echo "🧪 Running golangci-lint..."
-	@go mod tidy
 	@golangci-lint run --config=.golangci.yml --tests=false --exclude-use-default=false
 	@echo "Completed golangci-lint."
 .PHONY: _lint
