@@ -85,7 +85,7 @@ func (u *UserService) CreateUser(data map[string]interface{}, params map[string]
 }
 
 // UpdateUser update an awx user.
-func (u *UserService) UpdateUser(id int, data map[string]interface{}, params map[string]string) (*User, error) {
+func (u *UserService) UpdateUser(id int, data map[string]interface{}, _ map[string]string) (*User, error) {
 	result := new(User)
 	endpoint := fmt.Sprintf("%s%d", usersAPIEndpoint, id)
 	payload, err := json.Marshal(data)
@@ -183,7 +183,7 @@ func (u *UserService) ListUserRoleEntitlements(id int, params map[string]string)
 }
 
 // UpdateUserRoleEntitlement updates an awx user role entitlement.
-func (u *UserService) UpdateUserRoleEntitlement(id int, data map[string]interface{}, params map[string]string) (interface{}, error) {
+func (u *UserService) UpdateUserRoleEntitlement(id int, data map[string]interface{}, _ map[string]string) (interface{}, error) {
 	result := new(interface{})
 	endpoint := fmt.Sprintf("%s%d/roles/", usersAPIEndpoint, id)
 	payload, err := json.Marshal(data)

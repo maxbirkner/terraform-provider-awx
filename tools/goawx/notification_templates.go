@@ -99,7 +99,7 @@ func (s *NotificationTemplatesService) Create(data map[string]interface{}, param
 }
 
 // Update update an awx notification_template.
-func (s *NotificationTemplatesService) Update(id int, data map[string]interface{}, params map[string]string) (*NotificationTemplate, error) {
+func (s *NotificationTemplatesService) Update(id int, data map[string]interface{}, _ map[string]string) (*NotificationTemplate, error) {
 	result := new(NotificationTemplate)
 	endpoint := fmt.Sprintf("%s%d", notificationTemplatesAPIEndpoint, id)
 	payload, err := json.Marshal(data)

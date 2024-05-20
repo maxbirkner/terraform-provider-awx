@@ -22,5 +22,5 @@ func resourceWorkflowJobTemplateNodeFailure() *schema.Resource {
 func resourceWorkflowJobTemplateNodeFailureCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
 	awxService := client.WorkflowJobTemplateNodeFailureService
-	return createNodeForWorkflowJob(awxService, ctx, d, m)
+	return createNodeForWorkflowJob(ctx, awxService, d, m)
 }

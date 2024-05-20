@@ -63,7 +63,7 @@ func resourceSettingsLDAPTeamMap() *schema.Resource {
 }
 
 type teamMapEntry struct {
-	UserDNs      interface{} `json:"users"`
+	Users        interface{} `json:"users"`
 	Organization string      `json:"organization"`
 	Remove       bool        `json:"remove"`
 }
@@ -102,7 +102,7 @@ func resourceSettingsLDAPTeamMapCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	newTMap := teamMapEntry{
-		UserDNs:      d.Get("users").([]interface{}),
+		Users:        d.Get("users").([]interface{}),
 		Organization: d.Get("organization").(string),
 		Remove:       d.Get("remove").(bool),
 	}
@@ -159,7 +159,7 @@ func resourceSettingsLDAPTeamMapUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	utMap := tMaps[name]
-	utMap.UserDNs = users
+	utMap.Users = users
 	utMap.Organization = organization
 	utMap.Remove = remove
 	tMaps[name] = utMap
@@ -204,11 +204,11 @@ func resourceSettingsLDAPTeamMapRead(_ context.Context, d *schema.ResourceData, 
 
 	/*return buildDiagnosticsMessage(
 		"returning as desired",
-		"Data: %v %T", mapdef.UserDNs, mapdef.UserDNs,
+		"Data: %v %T", mapdef.Users, mapdef.Users,
 	)*/
 
 	var users []string
-	switch tt := mapdef.UserDNs.(type) {
+	switch tt := mapdef.Users.(type) {
 	case string:
 		users = []string{tt}
 	case []string:

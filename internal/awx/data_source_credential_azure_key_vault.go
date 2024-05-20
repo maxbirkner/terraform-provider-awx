@@ -59,7 +59,7 @@ func dataSourceCredentialAzure() *schema.Resource {
 	}
 }
 
-func dataSourceCredentialAzureRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceCredentialAzureRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	client := m.(*awx.AWX)

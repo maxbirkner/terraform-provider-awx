@@ -99,7 +99,7 @@ func (p *ExecutionEnvironmentsService) CreateExecutionEnvironment(data map[strin
 }
 
 // UpdateExecutionEnvironment update an awx ExecutionEnvironment.
-func (p *ExecutionEnvironmentsService) UpdateExecutionEnvironment(id int, data map[string]interface{}, params map[string]string) (*ExecutionEnvironment, error) {
+func (p *ExecutionEnvironmentsService) UpdateExecutionEnvironment(id int, data map[string]interface{}, _ map[string]string) (*ExecutionEnvironment, error) {
 	result := new(ExecutionEnvironment)
 	endpoint := fmt.Sprintf("%s%d", executionEnvironmentsAPIEndpoint, id)
 	payload, err := json.Marshal(data)

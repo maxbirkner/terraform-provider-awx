@@ -37,7 +37,7 @@ func getResourceJobTemplateNotificationTemplateDisassociateFuncForType(client *a
 }
 
 func resourceJobTemplateNotificationTemplateCreateForType(typ string) func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		client := m.(*awx.AWX)
 		jobTemplateID := d.Get("job_template_id").(int)
 		if _, err := client.JobTemplateService.GetJobTemplateByID(jobTemplateID, make(map[string]string)); err != nil {
@@ -72,7 +72,7 @@ func resourceJobTemplateNotificationTemplateRead(_ context.Context, _ *schema.Re
 }
 
 func resourceJobTemplateNotificationTemplateDeleteForType(typ string) func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		client := m.(*awx.AWX)
 		jobTemplateID := d.Get("job_template_id").(int)
 		if _, err := client.JobTemplateService.GetJobTemplateByID(jobTemplateID, make(map[string]string)); err != nil {

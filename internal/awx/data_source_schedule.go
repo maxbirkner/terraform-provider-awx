@@ -34,7 +34,7 @@ func dataSourceSchedule() *schema.Resource {
 	}
 }
 
-func dataSourceSchedulesRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceSchedulesRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
 	params := make(map[string]string)

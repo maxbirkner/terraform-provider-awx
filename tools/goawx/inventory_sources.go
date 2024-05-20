@@ -102,7 +102,7 @@ func (i *InventorySourcesService) CreateInventorySource(data map[string]interfac
 }
 
 // UpdateInventorySource update an awx InventorySource.
-func (i *InventorySourcesService) UpdateInventorySource(id int, data map[string]interface{}, params map[string]string) (*InventorySource, error) {
+func (i *InventorySourcesService) UpdateInventorySource(id int, data map[string]interface{}, _ map[string]string) (*InventorySource, error) {
 	result := new(InventorySource)
 	endpoint := fmt.Sprintf("%s%d", inventorySourcesAPIEndpoint, id)
 	payload, err := json.Marshal(data)
@@ -129,7 +129,7 @@ func (i *InventorySourcesService) UpdateInventorySource(id int, data map[string]
 }
 
 // GetInventorySource retrieves the InventorySource information from its ID or Name.
-func (i *InventorySourcesService) GetInventorySource(id int, params map[string]string) (*InventorySource, error) {
+func (i *InventorySourcesService) GetInventorySource(id int, _ map[string]string) (*InventorySource, error) {
 	endpoint := fmt.Sprintf("%s%d", inventorySourcesAPIEndpoint, id)
 	result := new(InventorySource)
 	resp, err := i.client.Requester.GetJSON(endpoint, result, map[string]string{})

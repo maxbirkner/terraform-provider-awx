@@ -102,7 +102,7 @@ func (g *GroupService) CreateGroup(data map[string]interface{}, params map[strin
 }
 
 // UpdateGroup update an awx group.
-func (g *GroupService) UpdateGroup(id int, data map[string]interface{}, params map[string]string) (*Group, error) {
+func (g *GroupService) UpdateGroup(id int, data map[string]interface{}, _ map[string]string) (*Group, error) {
 	result := new(Group)
 	endpoint := fmt.Sprintf("%s%d", groupsAPIEndpoint, id)
 	payload, err := json.Marshal(data)

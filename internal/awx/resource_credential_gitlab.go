@@ -74,7 +74,7 @@ func resourceCredentialGitlabCreate(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func resourceCredentialGitlabRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func resourceCredentialGitlabRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	client := m.(*awx.AWX)

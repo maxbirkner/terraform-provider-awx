@@ -38,7 +38,7 @@ func dataSourceCredentialMachineRole() *schema.Resource {
 	}
 }
 
-func dataSourceCredentialMachineRoleRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceCredentialMachineRoleRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
 	params := make(map[string]string)

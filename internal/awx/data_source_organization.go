@@ -34,7 +34,7 @@ func dataSourceOrganization() *schema.Resource {
 	}
 }
 
-func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func dataSourceOrganizationRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	client := m.(*awx.AWX)
 	params := make(map[string]string)

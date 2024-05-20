@@ -83,7 +83,7 @@ func (t *TeamService) ListTeamRoleEntitlements(id int, params map[string]string)
 }
 
 // GetTeamObjectRoles shows a list of object roles for a team.
-func (t *TeamService) GetTeamObjectRoles(id int, params map[string]string, pagination *PaginationRequest) ([]*ApplyRole, *ListTeamRolesResponse, error) {
+func (t *TeamService) GetTeamObjectRoles(id int, params map[string]string, _ *PaginationRequest) ([]*ApplyRole, *ListTeamRolesResponse, error) {
 	result := new(ListTeamRolesResponse)
 	endpoint := fmt.Sprintf("%s%d/object_roles/", teamsAPIEndpoint, id)
 	resp, err := t.client.Requester.GetJSON(endpoint, result, params)
@@ -189,11 +189,7 @@ func (t *TeamService) AddTeamUser(id int, data map[string]interface{}) error {
 		return err
 	}
 
-	if err := CheckResponse(resp); err != nil {
-		return err
-	}
-
-	return nil
+	return CheckResponse(resp)
 }
 
 // RemoveTeamUser will remove the user from destination team without deleting the user.
@@ -223,11 +219,7 @@ func (t *TeamService) RemoveTeamUser(id int, data map[string]interface{}) error 
 		return err
 	}
 
-	if err := CheckResponse(resp); err != nil {
-		return err
-	}
-
-	return nil
+	return CheckResponse(resp)
 }
 
 // GetTeamByID shows the details of a team.
@@ -291,7 +283,7 @@ func (t *TeamService) CreateTeam(data map[string]interface{}, params map[string]
 }
 
 // UpdateTeam update an awx Team.
-func (t *TeamService) UpdateTeam(id int, data map[string]interface{}, params map[string]string) (*Team, error) {
+func (t *TeamService) UpdateTeam(id int, data map[string]interface{}, _ map[string]string) (*Team, error) {
 	result := new(Team)
 	endpoint := fmt.Sprintf("%s%d/", teamsAPIEndpoint, id)
 	payload, err := json.Marshal(data)

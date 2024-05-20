@@ -92,7 +92,7 @@ var workflowJobNodeSchema = map[string]*schema.Schema{
 	},
 }
 
-func createNodeForWorkflowJob(awxService *awx.WorkflowJobTemplateNodeStepService, ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+func createNodeForWorkflowJob(ctx context.Context, awxService *awx.WorkflowJobTemplateNodeStepService, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	templateNodeID := d.Get("workflow_job_template_node_id").(int)
 	result, err := awxService.CreateWorkflowJobTemplateNodeStep(templateNodeID, map[string]interface{}{
