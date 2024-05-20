@@ -1,3 +1,17 @@
+# [1.0.10](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.0.9...v1.0.10) (2024-05-20)
+
+Thank you! @quentinleclerc
+
+### Changes:
+
+* Upgraded golang-ci lint to 1.58.2
+* Addresses new linting issues
+
+### Fixes:
+
+* [PR#4](https://github.com/josh-silvas/terraform-provider-awx/pull/4) Fixes: Can not create an organization without default_environment
+
+
 # [1.0.8](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.0.7...v1.0.8) (2024-04-06)
 
 Thank you! @NikolayDupak
