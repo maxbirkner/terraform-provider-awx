@@ -1,14 +1,14 @@
 package awx
 
 import (
-	"context"
-	"encoding/json"
-	"strconv"
+    "context"
+    "encoding/json"
+    "strconv"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
-	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
+    "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+    "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+    awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
+    "github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
 func resourceCredentialType() *schema.Resource {
@@ -102,10 +102,20 @@ func resourceCredentialTypeRead(_ context.Context, d *schema.ResourceData, m int
 	if err := d.Set("kind", credType.Kind); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("inputs", credType.Inputs); err != nil {
-		return diag.FromErr(err)
+
+    inputsBytes, err := json.Marshal(credType.Inputs)
+    if err != nil {
+        return diag.FromErr(err)
+    }
+    injectorBytes, err := json.Marshal(credType.Injectors)
+    if err != nil {
+        return diag.FromErr(err)
+    }
+
+	if err := d.Set("inputs", string(inputsBytes)); err != nil {
+        return diag.FromErr(err)
 	}
-	if err := d.Set("injectors", credType.Injectors); err != nil {
+	if err := d.Set("injectors", string(injectorBytes)); err != nil {
 		return diag.FromErr(err)
 	}
 
