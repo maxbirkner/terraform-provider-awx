@@ -42,7 +42,7 @@ jobs:
             @semantic-release/release-notes-generator@13.0.0
             @semantic-release/changelog@6.0.3
             @semantic-release/git@10.0.1
-            @semantic-release/github@23.1.1
+            @semantic-release/github@10.0.5
         env:
           GIT_CREDENTIALS: git:${{ secrets.PAT }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
