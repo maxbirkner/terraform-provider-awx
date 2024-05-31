@@ -1,3 +1,10 @@
+# [0.27.0](https://github.com/denouche/terraform-provider-awx/compare/v0.26.1...v0.27.0) (2024-05-31)
+
+
+### Features
+
+* **awx_job_template_launch:** add job template launch timeout ([#72](https://github.com/denouche/terraform-provider-awx/issues/72)) ([e23618c](https://github.com/denouche/terraform-provider-awx/commit/e23618c7c71270389fe93a77314ad8cf44ea1bfb))
+
 ## [0.26.1](https://github.com/denouche/terraform-provider-awx/compare/v0.26.0...v0.26.1) (2024-05-31)
 
 
