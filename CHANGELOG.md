@@ -1,3 +1,11 @@
+## [0.26.1](https://github.com/denouche/terraform-provider-awx/compare/v0.26.0...v0.26.1) (2024-05-31)
+
+
+### Bug Fixes
+
+* organization default env type ([af1c640](https://github.com/denouche/terraform-provider-awx/commit/af1c6402f482c894a28e113abcfaf145bde7783b))
+* organization default env var ([efed961](https://github.com/denouche/terraform-provider-awx/commit/efed961273f09b7b87dc1fb0eb657b6179647cbe))
+
 # [0.26.0](https://github.com/denouche/terraform-provider-awx/compare/v0.25.2...v0.26.0) (2024-03-19)
 
 
