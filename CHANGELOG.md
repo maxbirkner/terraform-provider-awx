@@ -1,3 +1,15 @@
+# [1.0.11](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.0.10...v1.0.11) (2024-05-20)
+
+### Changes:
+
+*
+
+### Fixes:
+
+* [PR#6](https://github.com/josh-silvas/terraform-provider-awx/pull/6) Fixing credential type permadiff with json content for inputs/injectors #6
+* [PR#7](https://github.com/josh-silvas/terraform-provider-awx/pull/7) Fix resource awx_job_template by making inventory_id optional as it can be asked on prompt #7
+
+
 # [1.0.10](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.0.9...v1.0.10) (2024-05-20)
 
 Thank you! @quentinleclerc
