@@ -42,8 +42,8 @@ func resourceJobTemplate() *schema.Resource {
 			},
 			"inventory_id": {
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The inventory ID to associate with the job template.",
+				Optional:    true,
+				Description: "The inventory ID to associate with the job template. If not set, `ask_inventory_on_launch` must be true.",
 			},
 			"project_id": {
 				Type:        schema.TypeInt,
@@ -142,9 +142,10 @@ func resourceJobTemplate() *schema.Resource {
 				Default:  false,
 			},
 			"ask_inventory_on_launch": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Defaults to false. Whether to ask for inventory on launch. If set to false, `inventory_id` must be set.",
 			},
 			"ask_variables_on_launch": {
 				Type:     schema.TypeBool,

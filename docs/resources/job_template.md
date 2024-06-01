@@ -45,7 +45,6 @@ resource "awx_job_template" "example" {
 
 ### Required
 
-- `inventory_id` (String) The inventory ID to associate with the job template.
 - `job_type` (String) Can be one of: `run`, `check`, or `scan`
 - `name` (String) The name of the job template.
 - `project_id` (Number) The project ID to associate with the job template.
@@ -55,7 +54,7 @@ resource "awx_job_template" "example" {
 - `allow_simultaneous` (Boolean)
 - `ask_credential_on_launch` (Boolean)
 - `ask_diff_mode_on_launch` (Boolean)
-- `ask_inventory_on_launch` (Boolean)
+- `ask_inventory_on_launch` (Boolean) Defaults to false. Whether to ask for inventory on launch. If set to false, `inventory_id` must be set.
 - `ask_job_type_on_launch` (Boolean)
 - `ask_limit_on_launch` (Boolean)
 - `ask_skip_tags_on_launch` (Boolean)
@@ -71,6 +70,7 @@ resource "awx_job_template" "example" {
 - `force_handlers` (Boolean) Force handlers to run on the job template.
 - `forks` (Number) The number of forks to associate with the job template.
 - `host_config_key` (String)
+- `inventory_id` (String) The inventory ID to associate with the job template. If not set, `ask_inventory_on_launch` must be true.
 - `job_tags` (String) The job tags to associate with the job template.
 - `limit` (String) The limit to apply to filter hosts that run on this job template.
 - `playbook` (String) The playbook to associate with the job template.
