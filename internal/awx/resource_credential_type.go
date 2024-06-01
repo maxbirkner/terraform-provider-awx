@@ -102,10 +102,20 @@ func resourceCredentialTypeRead(_ context.Context, d *schema.ResourceData, m int
 	if err := d.Set("kind", credType.Kind); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("inputs", credType.Inputs); err != nil {
+
+	inputsBytes, err := json.Marshal(credType.Inputs)
+	if err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("injectors", credType.Injectors); err != nil {
+	injectorBytes, err := json.Marshal(credType.Injectors)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("inputs", string(inputsBytes)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("injectors", string(injectorBytes)); err != nil {
 		return diag.FromErr(err)
 	}
 
