@@ -3,7 +3,10 @@ package awx
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -24,6 +27,12 @@ func Provider() *schema.Provider { //nolint:funlen
 				Optional:    true,
 				Default:     false,
 				Description: "Disable SSL verification of API calls",
+			},
+			"ca_pem": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				Description: "Path to a CA Certificate in PEM format to be used to verify the server",
 			},
 			"username": {
 				Type:        schema.TypeString,
@@ -115,6 +124,7 @@ func providerConfigure(_ context.Context, d *schema.ResourceData) (interface{}, 
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 	token := d.Get("token").(string)
+	caPem := d.Get("ca_pem").(string)
 
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
@@ -124,6 +134,27 @@ func providerConfigure(_ context.Context, d *schema.ResourceData) (interface{}, 
 		customTransport := http.DefaultTransport.(*http.Transport).Clone()
 		//nolint:gosec
 		customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		client.Transport = customTransport
+	} else if caPem != "" {
+		customTransport := http.DefaultTransport.(*http.Transport).Clone()
+
+		certPool := x509.NewCertPool()
+		if caCertPem, err := os.ReadFile(caPem); err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to read file",
+				Detail:   fmt.Sprintf("Unable to read certificate file located at %s.", caPem),
+			})
+			return nil, diags
+		} else if ok := certPool.AppendCertsFromPEM(caCertPem); !ok {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to parse certificate.",
+				Detail:   "Unable to parse certificate. Check that the certificate is in a valid PEM format.",
+			})
+			return nil, diags
+		}
+		customTransport.TLSClientConfig = &tls.Config{RootCAs: certPool, MinVersion: tls.VersionTLS12}
 		client.Transport = customTransport
 	}
 
