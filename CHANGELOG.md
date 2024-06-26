@@ -1,3 +1,13 @@
+# [1.0.12](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.0.11...v1.0.12) (2024-06-26)
+
+### Changes:
+
+*  [PR#8](https://github.com/josh-silvas/terraform-provider-awx/pull/8/files) Add provider option to set custom ca file (@quentinleclerc)
+
+### Fixes:
+
+*
+
 # [1.0.11](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.0.10...v1.0.11) (2024-05-20)
 
 ### Changes:
