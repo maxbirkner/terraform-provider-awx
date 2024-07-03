@@ -10,6 +10,8 @@ import (
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
 )
 
+const gceCredentialTypeName = "Google Compute Engine" //nolint:gosec
+
 func resourceCredentialGoogleComputeEngine() *schema.Resource {
 	return &schema.Resource{
 		Description:   "`awx_credential_google_compute_engine` manages Google Compute Engine credentials in AWX.",
@@ -57,11 +59,22 @@ func resourceCredentialGoogleComputeEngineCreate(ctx context.Context, d *schema.
 	var diags diag.Diagnostics
 	var err error
 
+	client := m.(*awx.AWX)
+	gceCredType, err := client.CredentialTypeService.GetCredentialTypeByName(gceCredentialTypeName, map[string]string{})
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to create new credentials",
+			Detail:   fmt.Sprintf("Unable to fetch credential type with Name: %s. Error: %s", gceCredentialTypeName, err.Error()),
+		})
+		return diags
+	}
+
 	newCredential := map[string]interface{}{
 		"name":            d.Get("name").(string),
 		"description":     d.Get("description").(string),
 		"organization":    d.Get("organization_id").(int),
-		"credential_type": 10, // Google Compute Engine
+		"credential_type": gceCredType.ID,
 		"inputs": map[string]interface{}{
 			"username":     d.Get("username").(string),
 			"project":      d.Get("project").(string),
@@ -69,7 +82,6 @@ func resourceCredentialGoogleComputeEngineCreate(ctx context.Context, d *schema.
 		},
 	}
 
-	client := m.(*awx.AWX)
 	cred, err := client.CredentialsService.CreateCredentials(newCredential, map[string]string{})
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -128,19 +140,30 @@ func resourceCredentialGoogleComputeEngineUpdate(ctx context.Context, d *schema.
 		"description",
 		"username",
 		"project",
-
 		"ssh_key_data",
 	}
 
+	client := m.(*awx.AWX)
+
 	if d.HasChanges(keys...) {
 		var err error
+
+		gceCredType, err := client.CredentialTypeService.GetCredentialTypeByName(gceCredentialTypeName, map[string]string{})
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to create new credentials",
+				Detail:   fmt.Sprintf("Unable to fetch credential type with Name: %s. Error: %s", gceCredentialTypeName, err.Error()),
+			})
+			return diags
+		}
 
 		id, _ := strconv.Atoi(d.Id())
 		updatedCredential := map[string]interface{}{
 			"name":            d.Get("name").(string),
 			"description":     d.Get("description").(string),
 			"organization":    d.Get("organization_id").(int),
-			"credential_type": 10, // Google Compute Engine
+			"credential_type": gceCredType.ID,
 			"inputs": map[string]interface{}{
 				"username":     d.Get("username").(string),
 				"project":      d.Get("project").(string),
@@ -148,7 +171,6 @@ func resourceCredentialGoogleComputeEngineUpdate(ctx context.Context, d *schema.
 			},
 		}
 
-		client := m.(*awx.AWX)
 		_, err = client.CredentialsService.UpdateCredentialsByID(id, updatedCredential, map[string]string{})
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
