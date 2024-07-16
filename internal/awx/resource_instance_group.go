@@ -52,6 +52,13 @@ func resourceInstanceGroup() *schema.Resource {
 				StateFunc:   utils.Normalize,
 				Description: "The pod spec override for the instance group.",
 			},
+			"credential_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
+				StateFunc:   utils.Normalize,
+				Description: "ID of the credential of type 'OpenShift or Kubernetes API Bearer Token' to use as remote cluster.",
+			},
 		},
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -70,6 +77,7 @@ func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, m 
 		"is_container_group":         d.Get("is_container_group").(bool),
 		"policy_instance_percentage": d.Get("policy_instance_percentage").(int),
 		"pod_spec_override":          d.Get("pod_spec_override").(string),
+		"credential":                 d.Get("credential_id").(string),
 	}, map[string]string{})
 	if err != nil {
 		return utils.DiagCreate(diagInstanceGroupTitle, err)
@@ -93,6 +101,7 @@ func resourceInstanceGroupUpdate(ctx context.Context, d *schema.ResourceData, m 
 		"is_container_group":         d.Get("is_container_group").(bool),
 		"policy_instance_percentage": d.Get("policy_instance_percentage").(int),
 		"pod_spec_override":          d.Get("pod_spec_override").(string),
+		"credential":                 d.Get("credential_id").(string),
 	}, nil); err != nil {
 		return utils.DiagUpdate(diagInstanceGroupTitle, id, err)
 	}
