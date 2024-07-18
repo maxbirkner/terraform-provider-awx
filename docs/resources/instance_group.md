@@ -49,6 +49,7 @@ resource "awx_instance_group" "example" {
 
 ### Optional
 
+- `credential_id` (String) ID of the credential of type 'OpenShift or Kubernetes API Bearer Token' to use as remote cluster.
 - `is_container_group` (Boolean) Whether the instance group is a container group.
 - `pod_spec_override` (String) The pod spec override for the instance group.
 - `policy_instance_minimum` (Number) The minimum number of instances to run in the instance group.
