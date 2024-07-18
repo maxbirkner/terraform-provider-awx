@@ -247,3 +247,72 @@ func (jt *JobTemplateService) AssociateCredentials(id int, data map[string]inter
 
 	return result, nil
 }
+
+// DisAssociateInstanceGroups remove instance group from an awx job template.
+func (jt *JobTemplateService) DisAssociateInstanceGroups(id int, data map[string]interface{}, _ map[string]string) (*JobTemplate, error) {
+	result := new(JobTemplate)
+	endpoint := fmt.Sprintf("%s%d/instance_groups/", jobTemplateAPIEndpoint, id)
+	data["disassociate"] = true
+	mandatoryFields = []string{"id"}
+	validate, status := ValidateParams(data, mandatoryFields)
+	if !status {
+		err := fmt.Errorf("mandatory input arguments are absent: %s", validate)
+		return nil, err
+	}
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := jt.client.Requester.PostJSON(endpoint, bytes.NewReader(payload), result, nil)
+	if resp != nil {
+		func() {
+			if err := resp.Body.Close(); err != nil {
+				fmt.Println(err)
+			}
+		}()
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if err := CheckResponse(resp); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// AssociateInstanceGroups  adding instance group to JobTemplate.
+func (jt *JobTemplateService) AssociateInstanceGroups(id int, data map[string]interface{}, _ map[string]string) (*JobTemplate, error) {
+	result := new(JobTemplate)
+
+	endpoint := fmt.Sprintf("%s%d/instance_groups/", jobTemplateAPIEndpoint, id)
+	data["associate"] = true
+	mandatoryFields = []string{"id"}
+	validate, status := ValidateParams(data, mandatoryFields)
+	if !status {
+		err := fmt.Errorf("mandatory input arguments are absent: %s", validate)
+		return nil, err
+	}
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := jt.client.Requester.PostJSON(endpoint, bytes.NewReader(payload), result, nil)
+	if resp != nil {
+		func() {
+			if err := resp.Body.Close(); err != nil {
+				fmt.Println(err)
+			}
+		}()
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if err := CheckResponse(resp); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
