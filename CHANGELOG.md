@@ -1,3 +1,14 @@
+# [1.1.0](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.0.12...v1.1.0) (2024-07-18)
+
+### Changes:
+
+*  [PR#10](https://github.com/josh-silvas/terraform-provider-awx/pull/10) Adds a new resource to associate an instance group to a job template. (@quentinleclerc)
+
+### Fixes:
+
+*  [PR#9](https://github.com/josh-silvas/terraform-provider-awx/pull/9) Added the possibility to specify a credential_id referring to a Kubernetes or OpenShift credential to create ContainerGroup. (@quentinleclerc)
+
+
 # [1.0.12](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.0.11...v1.0.12) (2024-06-26)
 
 ### Changes:
