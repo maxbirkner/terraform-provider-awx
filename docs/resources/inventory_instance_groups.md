@@ -3,12 +3,12 @@
 page_title: "awx_inventory_instance_groups Resource - terraform-provider-awx"
 subcategory: ""
 description: |-
-  Associates an instance group to a inventory
+  Associates an instance group to an inventory
 ---
 
 # awx_inventory_instance_groups (Resource)
 
-Associates an instance group to a inventory
+Associates an instance group to an inventory
 
 
 
