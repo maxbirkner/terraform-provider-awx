@@ -37,12 +37,12 @@ func resourceInventoryInstanceGroups() *schema.Resource {
 
 func resourceInventoryInstanceGroupsCreate(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	inventoryId := d.Get("inventory_id").(int)
-	if _, err := client.InventoriesService.GetInventoryByID(inventoryId, make(map[string]string)); err != nil {
-		return utils.DiagNotFound("Inventory InstanceGroup", inventoryId, err)
+	inventoryID := d.Get("inventory_id").(int)
+	if _, err := client.InventoriesService.GetInventoryByID(inventoryID, make(map[string]string)); err != nil {
+		return utils.DiagNotFound("Inventory InstanceGroup", inventoryID, err)
 	}
 
-	result, err := client.InventoriesService.AssociateInstanceGroups(inventoryId, map[string]interface{}{
+	result, err := client.InventoriesService.AssociateInstanceGroups(inventoryID, map[string]interface{}{
 		"id": d.Get("instance_group_id").(int),
 	}, map[string]string{})
 
@@ -60,16 +60,16 @@ func resourceInventoryInstanceGroupsRead(_ context.Context, _ *schema.ResourceDa
 
 func resourceInventoryInstanceGroupsDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
-	inventoryId := d.Get("inventory_id").(int)
-	res, err := client.InventoriesService.GetInventoryByID(inventoryId, make(map[string]string))
+	inventoryID := d.Get("inventory_id").(int)
+	res, err := client.InventoriesService.GetInventoryByID(inventoryID, make(map[string]string))
 	if err != nil {
-		return utils.DiagNotFound("Inventory InstanceGroup", inventoryId, err)
+		return utils.DiagNotFound("Inventory InstanceGroup", inventoryID, err)
 	}
 
 	if _, err = client.InventoriesService.DisAssociateInstanceGroups(res.ID, map[string]interface{}{
 		"id": d.Get("instance_group_id").(int),
 	}, map[string]string{}); err != nil {
-		return utils.DiagDelete("Inventory DisAssociateInstanceGroups", inventoryId, err)
+		return utils.DiagDelete("Inventory DisAssociateInstanceGroups", inventoryID, err)
 	}
 
 	d.SetId("")
