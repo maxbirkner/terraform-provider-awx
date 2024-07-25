@@ -68,6 +68,7 @@ func Provider() *schema.Provider { //nolint:funlen
 			"awx_inventory_group":                                     resourceInventoryGroup(),
 			"awx_inventory_source":                                    resourceInventorySource(),
 			"awx_inventory":                                           resourceInventory(),
+            "awx_inventory_instance_groups":                           resourceInventoryInstanceGroups(),
 			"awx_job_template_credential":                             resourceJobTemplateCredentials(),
 			"awx_job_template_instance_groups":                        resourceJobTemplateInstanceGroups(),
 			"awx_job_template":                                        resourceJobTemplate(),

@@ -174,3 +174,72 @@ func (i *InventoriesService) DeleteInventory(id int) (*Inventory, error) {
 
 	return result, nil
 }
+
+// DisAssociateInstanceGroups remove InstanceGroup from an awx Inventory.
+func (i *InventoriesService) DisAssociateInstanceGroups(id int, data map[string]interface{}, _ map[string]string) (*Inventory, error) {
+    result := new(Inventory)
+    endpoint := fmt.Sprintf("%s%d/instance_groups/", inventoriesAPIEndpoint, id)
+    data["disassociate"] = true
+    mandatoryFields = []string{"id"}
+    validate, status := ValidateParams(data, mandatoryFields)
+    if !status {
+        err := fmt.Errorf("mandatory input arguments are absent: %s", validate)
+        return nil, err
+    }
+    payload, err := json.Marshal(data)
+    if err != nil {
+        return nil, err
+    }
+    resp, err := i.client.Requester.PostJSON(endpoint, bytes.NewReader(payload), result, nil)
+    if resp != nil {
+        func() {
+            if err := resp.Body.Close(); err != nil {
+                fmt.Println(err)
+            }
+        }()
+    }
+    if err != nil {
+        return nil, err
+    }
+
+    if err := CheckResponse(resp); err != nil {
+        return nil, err
+    }
+
+    return result, nil
+}
+
+// AssociateInstanceGroups  adding InstanceGroup to Inventory.
+func (i *InventoriesService) AssociateInstanceGroups(id int, data map[string]interface{}, _ map[string]string) (*Inventory, error) {
+    result := new(Inventory)
+
+    endpoint := fmt.Sprintf("%s%d/instance_groups/", inventoriesAPIEndpoint, id)
+    data["associate"] = true
+    mandatoryFields = []string{"id"}
+    validate, status := ValidateParams(data, mandatoryFields)
+    if !status {
+        err := fmt.Errorf("mandatory input arguments are absent: %s", validate)
+        return nil, err
+    }
+    payload, err := json.Marshal(data)
+    if err != nil {
+        return nil, err
+    }
+    resp, err := i.client.Requester.PostJSON(endpoint, bytes.NewReader(payload), result, nil)
+    if resp != nil {
+        func() {
+            if err := resp.Body.Close(); err != nil {
+                fmt.Println(err)
+            }
+        }()
+    }
+    if err != nil {
+        return nil, err
+    }
+
+    if err := CheckResponse(resp); err != nil {
+        return nil, err
+    }
+
+    return result, nil
+}
