@@ -12,7 +12,7 @@ import (
 
 func resourceInventoryInstanceGroups() *schema.Resource {
 	return &schema.Resource{
-		Description:   "Associates an instance group to a inventory",
+		Description:   "Associates an instance group to an inventory",
 		CreateContext: resourceInventoryInstanceGroupsCreate,
 		DeleteContext: resourceInventoryInstanceGroupsDelete,
 		ReadContext:   resourceInventoryInstanceGroupsRead,
