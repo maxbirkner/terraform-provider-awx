@@ -1,3 +1,13 @@
+# [1.1.1](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.1.0...v1.1.1) (2024-07-28)
+
+### Changes:
+
+*  [PR#11](https://github.com/josh-silvas/terraform-provider-awx/pull/11) Adding a new resource to associate an instance group to an inventory. (@quentinleclerc)
+
+### Fixes:
+
+* N/A
+
 # [1.1.0](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.0.12...v1.1.0) (2024-07-18)
 
 ### Changes:
