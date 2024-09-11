@@ -453,7 +453,7 @@ type JobLaunch struct {
 	Failed                  bool              `json:"failed"`
 	Started                 interface{}       `json:"started"`
 	Finished                interface{}       `json:"finished"`
-	Elapsed                 int               `json:"elapsed"`
+	Elapsed                 float64           `json:"elapsed"`
 	JobArgs                 string            `json:"job_args"`
 	JobCwd                  string            `json:"job_cwd"`
 	JobEnv                  map[string]string `json:"job_env"`
