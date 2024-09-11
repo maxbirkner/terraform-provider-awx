@@ -95,6 +95,21 @@ func (cs *CredentialTypeService) GetCredentialTypeByID(id int, params map[string
 	return result, nil
 }
 
+// GetCredentialTypeByName : Fetches a credential type by Name.
+func (cs *CredentialTypeService) GetCredentialTypeByName(name string, params map[string]string) (*CredentialType, error) {
+	credentialTypes, _, err := cs.ListCredentialTypes(params)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, credentialType := range credentialTypes {
+		if credentialType.Name == name {
+			return credentialType, nil
+		}
+	}
+	return nil, fmt.Errorf("could not find credential type with name %s", name)
+}
+
 // UpdateCredentialTypeByID : Updates a credential type by ID.
 func (cs *CredentialTypeService) UpdateCredentialTypeByID(id int, data map[string]interface{}, params map[string]string) (*CredentialType, error) {
 	result := new(CredentialType)
