@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/url"
 )
 
 // CredentialTypeService implements awx CredentialType apis.
@@ -20,27 +21,60 @@ type ListCredentialTypeResponse struct {
 const credentialTypesAPIEndpoint = "/api/v2/credential_types/" //nolint:gosec
 
 // ListCredentialTypes shows list of awx CredentialTypes.
-func (cs *CredentialTypeService) ListCredentialTypes(params map[string]string) ([]*CredentialType,
-	*ListCredentialTypeResponse, error) {
-	result := new(ListCredentialTypeResponse)
-	resp, err := cs.client.Requester.GetJSON(credentialTypesAPIEndpoint, result, params)
-	if resp != nil {
-		func() {
-			if err := resp.Body.Close(); err != nil {
-				fmt.Println(err)
+func (cs *CredentialTypeService) ListCredentialTypes(params map[string]string) ([]*CredentialType, error) {
+
+	results, err := cs.getAllPages(credentialTypesAPIEndpoint, params)
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func (cs *CredentialTypeService) getAllPages(firstURL string, params map[string]string) ([]*CredentialType, error) {
+	results := make([]*CredentialType, 0)
+	nextURL := firstURL
+	for {
+		nextURLParsed, err := url.Parse(nextURL)
+		if err != nil {
+			return nil, err
+		}
+
+		nextURLQueryParams := make(map[string]string)
+		for paramName, paramValues := range nextURLParsed.Query() {
+			if len(paramValues) > 0 {
+				nextURLQueryParams[paramName] = paramValues[0]
 			}
-		}()
-	}
-	if err != nil {
-		return nil, result, err
-	}
+		}
 
-	err = CheckResponse(resp)
-	if err != nil {
-		return nil, result, err
-	}
+		for paramName, paramValue := range params {
+			nextURLQueryParams[paramName] = paramValue
+		}
 
-	return result.Results, result, nil
+		result := new(ListCredentialTypeResponse)
+		resp, err := cs.client.Requester.GetJSON(nextURLParsed.Path, result, nextURLQueryParams)
+		if resp != nil {
+			func() {
+				if err := resp.Body.Close(); err != nil {
+					fmt.Println(err)
+				}
+			}()
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		if err := CheckResponse(resp); err != nil {
+			return nil, err
+		}
+
+		results = append(results, result.Results...)
+
+		if result.Next == nil || result.Next.(string) == "" {
+			break
+		}
+		nextURL = result.Next.(string)
+	}
+	return results, nil
 }
 
 // CreateCredentialType : Creates a new credential type in AWX.
@@ -97,7 +131,7 @@ func (cs *CredentialTypeService) GetCredentialTypeByID(id int, params map[string
 
 // GetCredentialTypeByName : Fetches a credential type by Name.
 func (cs *CredentialTypeService) GetCredentialTypeByName(name string, params map[string]string) (*CredentialType, error) {
-	credentialTypes, _, err := cs.ListCredentialTypes(params)
+	credentialTypes, err := cs.ListCredentialTypes(params)
 	if err != nil {
 		return nil, err
 	}

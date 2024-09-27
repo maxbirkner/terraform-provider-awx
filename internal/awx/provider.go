@@ -55,6 +55,7 @@ func Provider() *schema.Provider { //nolint:funlen
 		ResourcesMap: map[string]*schema.Resource{
 			"awx_credential_azure_key_vault":                          resourceCredentialAzureKeyVault(),
 			"awx_credential_google_compute_engine":                    resourceCredentialGoogleComputeEngine(),
+			"awx_credential_container_registry":                       resourceCredentialContainerRegistry(),
 			"awx_credential_input_source":                             resourceCredentialInputSource(),
 			"awx_credential":                                          resourceCredential(),
 			"awx_credential_type":                                     resourceCredentialType(),
