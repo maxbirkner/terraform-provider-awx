@@ -1,3 +1,24 @@
+# [1.1.3](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.1.2...v1.1.3) (2024-09-27)
+
+### Changes:
+
+*  [PR#15](https://github.com/josh-silvas/terraform-provider-awx/pull/15) Add container registry credential resource. (@aeber)
+
+### Fixes:
+
+* N/A
+
+# [1.1.2](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.1.1...v1.1.2) (2024-09-20)
+
+### Changes:
+
+*  N/A
+
+### Fixes:
+
+* [PR#12](https://github.com/josh-silvas/terraform-provider-awx/pull/12) Get compute engine credential type id dynamically. (@quentinleclerc)
+* [PR#13](https://github.com/josh-silvas/terraform-provider-awx/pull/13) fix JobLaunch json structure. (@alexandrud)
+
 # [1.1.1](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.1.0...v1.1.1) (2024-07-28)
 
 ### Changes:
