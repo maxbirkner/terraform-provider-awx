@@ -1,0 +1,32 @@
+name: "Terraform Provider Release"
+
+on:
+  push:
+    branches:
+      - "main"
+
+# Releases need permissions to read and write the repository contents.
+# GitHub considers creating releases and uploading assets as writing contents.
+permissions:
+  contents: "write"
+
+jobs:
+  release-tag:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332" # v4.1.7
+        with:
+          fetch-depth: 0
+          ref: "refs/heads/main"
+          # Avoid persisting GITHUB_TOKEN credentials as they take priority over our service account PAT for `git push` operations
+          # More details: https://github.com/actions/checkout/blob/b4626ce19ce1106186ddf9bb20e706842f11a7c3/adrs/0153-checkout-v2.md#persist-credentials
+          persist-credentials: false
+
+      - name: "Git Push Release Tag"
+        run: |
+          git config --global user.name "${{ vars.TF_DEVEX_CI_COMMIT_AUTHOR }}"
+          git config --global user.email "${{ vars.TF_DEVEX_CI_COMMIT_EMAIL }}"
+
+          git tag $(shell cat VERSION)
+          git push "https://${{ vars.TF_DEVEX_CI_COMMIT_AUTHOR }}:${{ secrets.TF_DEVEX_COMMIT_GITHUB_TOKEN }}@github.com/josh-silvas/terraform-provider-awx.git" "$(shell cat VERSION)"
