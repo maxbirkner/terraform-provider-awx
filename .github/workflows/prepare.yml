@@ -25,8 +25,7 @@ jobs:
 
       - name: "Git Push Release Tag"
         run: |
-          git config --global user.name "${{ vars.TF_DEVEX_CI_COMMIT_AUTHOR }}"
-          git config --global user.email "${{ vars.TF_DEVEX_CI_COMMIT_EMAIL }}"
-
-          git tag $(shell cat VERSION)
-          git push "https://${{ secrets.GITHUB_TOKEN }}@github.com/josh-silvas/terraform-provider-awx.git" "$(shell cat VERSION)"
+          export VERSION=$(cat VERSION)
+          echo "Publishing tag $VERSION for release."
+          git tag $VERSION
+          git push https://git:${{ secrets.GITHUB_TOKEN }}@github.com/josh-silvas/terraform-provider-awx $VERSION
