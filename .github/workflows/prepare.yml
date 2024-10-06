@@ -29,4 +29,4 @@ jobs:
           git config --global user.email "${{ vars.TF_DEVEX_CI_COMMIT_EMAIL }}"
 
           git tag $(shell cat VERSION)
-          git push "https://${{ vars.TF_DEVEX_CI_COMMIT_AUTHOR }}:${{ secrets.TF_DEVEX_COMMIT_GITHUB_TOKEN }}@github.com/josh-silvas/terraform-provider-awx.git" "$(shell cat VERSION)"
+          git push "https://${{ secrets.GITHUB_TOKEN }}@github.com/josh-silvas/terraform-provider-awx.git" "$(shell cat VERSION)"
