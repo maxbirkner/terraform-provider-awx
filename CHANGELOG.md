@@ -1,3 +1,13 @@
+# [1.1.4](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.1.3...v1.1.4) (2024-10-02)
+
+### Changes:
+
+*  [PR#16](https://github.com/josh-silvas/terraform-provider-awx/pull/16) Add missing ee admin role to available org roles. (@aeber)
+
+### Fixes:
+
+* N/A
+
 # [1.1.3](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.1.2...v1.1.3) (2024-09-27)
 
 ### Changes:
