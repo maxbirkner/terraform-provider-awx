@@ -63,6 +63,7 @@ func Provider() *schema.Provider { //nolint:funlen
 			"awx_credential_scm":                                      resourceCredentialSCM(),
 			"awx_credential_gitlab":                                   resourceCredentialGitlab(),
 			"awx_credential_galaxy":                                   resourceCredentialGalaxy(),
+			"awx_credential_vault":                                    resourceCredentialVault(),
 			"awx_execution_environment":                               resourceExecutionEnvironment(),
 			"awx_host":                                                resourceHost(),
 			"awx_instance_group":                                      resourceInstanceGroup(),
