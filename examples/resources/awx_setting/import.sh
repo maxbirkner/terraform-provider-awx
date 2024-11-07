@@ -1,5 +1,5 @@
-# Order can be imported by specifying the numeric identifier.
-terraform import awx_setting.social_auth_saml_technical_contact 760
-terraform import awx_setting.social_auth_saml_sp_entity_id 761
-terraform import awx_setting.schedule_max_jobs 762
-terraform import awx_setting.remote_host_headers 763
+# Settings can be imported by specifying the setting identifier.
+terraform import awx_setting.social_auth_saml_technical_contact SOCIAL_AUTH_SAML_TECHNICAL_CONTACT
+terraform import awx_setting.social_auth_saml_sp_entity_id SOCIAL_AUTH_SAML_SP_ENTITY_ID
+terraform import awx_setting.schedule_max_jobs SCHEDULE_MAX_JOBS
+terraform import awx_setting.remote_host_headers REMOTE_HOST_HEADERS
