@@ -28,9 +28,10 @@ func resourceSetting() *schema.Resource {
 				Description: "Name of setting to modify",
 			},
 			"value": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Value to be modified for given setting.",
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "Value to be modified for given setting.",
+				DiffSuppressFunc: SuppressEquivalentJSONDiffs,
 			},
 		},
 		Importer: &schema.ResourceImporter{
