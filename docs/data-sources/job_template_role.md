@@ -24,7 +24,7 @@ resource "awx_job_template" "example" {
 
 data "awx_job_template_role" "example" {
   name            = "Admin"
-  job_template_id = data.awx_job_template.example.id
+  job_template_id = awx_job_template.example.id
 }
 ```
 
