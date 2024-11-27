@@ -227,15 +227,22 @@ func resourceProjectDelete(_ context.Context, d *schema.ResourceData, m interfac
 	if jobID != 0 {
 		if _, err = client.ProjectUpdatesService.ProjectUpdateCancel(jobID); err != nil {
 			return utils.Diagf(
-				"Delete: Fail to canel Job",
-				"Fail to canel the Job %v for Project with ID %v, got %s",
+				"Delete: Failed to cancel Job",
+				"Failed to cancel the Job %v for Project with ID %v, got %s",
 				jobID, id, err,
 			)
 		}
 	}
 	// check if finished is 0
 	for finished.IsZero() {
-		prj, _ := client.ProjectUpdatesService.ProjectUpdateGet(jobID)
+		prj, err := client.ProjectUpdatesService.ProjectUpdateGet(jobID)
+		if err != nil {
+			return utils.Diagf(
+				"Delete: failed to update project job",
+				"Failed to refresh job status for job %v of project %v, got %s",
+				jobID, id, err,
+			)
+		}
 		finished = prj.Finished
 		time.Sleep(1 * time.Second)
 	}
