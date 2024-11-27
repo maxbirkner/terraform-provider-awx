@@ -538,7 +538,7 @@ type Job struct {
 	ScmRevision             string            `json:"scm_revision"`
 	InstanceGroup           int               `json:"instance_group"`
 	DiffMode                bool              `json:"diff_mode"`
-	Credential              *Credential       `json:"credential"`
+	Credential              int               `json:"credential"`
 	VaultCredential         interface{}       `json:"vault_credential"`
 }
 
