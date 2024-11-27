@@ -4,4 +4,5 @@ resource "awx_execution_environment" "example" {
   credential   = awx_credential.example.id
   description  = "Example Execution Environment"
   organization = awx_organization.example.id
+  pull         = "always"
 }
