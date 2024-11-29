@@ -731,25 +731,25 @@ type Group struct {
 //
 //nolint:maligned
 type Host struct {
-	ID                   int          `json:"id"`
-	Type                 string       `json:"type"`
-	URL                  string       `json:"url"`
-	Related              *Related     `json:"related"`
-	SummaryFields        *Summary     `json:"summary_fields"`
-	Created              time.Time    `json:"created"`
-	Modified             time.Time    `json:"modified"`
-	Name                 string       `json:"name"`
-	Description          string       `json:"description"`
-	Inventory            int          `json:"inventory"`
-	Enabled              bool         `json:"enabled"`
-	InstanceID           string       `json:"instance_id"`
-	Variables            string       `json:"variables"`
-	HasActiveFailures    bool         `json:"has_active_failures"`
-	HasInventorySources  bool         `json:"has_inventory_sources"`
-	LastJob              *Job         `json:"last_job"`
-	LastJobHostSummary   *HostSummary `json:"last_job_host_summary"`
-	InsightsSystemID     interface{}  `json:"insights_system_id"`
-	AnsibleFactsModified interface{}  `json:"ansible_facts_modified"`
+	ID                   int         `json:"id"`
+	Type                 string      `json:"type"`
+	URL                  string      `json:"url"`
+	Related              *Related    `json:"related"`
+	SummaryFields        *Summary    `json:"summary_fields"`
+	Created              time.Time   `json:"created"`
+	Modified             time.Time   `json:"modified"`
+	Name                 string      `json:"name"`
+	Description          string      `json:"description"`
+	Inventory            int         `json:"inventory"`
+	Enabled              bool        `json:"enabled"`
+	InstanceID           string      `json:"instance_id"`
+	Variables            string      `json:"variables"`
+	HasActiveFailures    bool        `json:"has_active_failures"`
+	HasInventorySources  bool        `json:"has_inventory_sources"`
+	LastJob              int         `json:"last_job"`
+	LastJobHostSummary   int         `json:"last_job_host_summary"`
+	InsightsSystemID     string      `json:"insights_system_id"`
+	AnsibleFactsModified interface{} `json:"ansible_facts_modified"`
 }
 
 // Organization represents an organization in AWX.
