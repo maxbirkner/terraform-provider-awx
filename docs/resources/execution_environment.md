@@ -19,6 +19,7 @@ resource "awx_execution_environment" "example" {
   credential   = awx_credential.example.id
   description  = "Example Execution Environment"
   organization = awx_organization.example.id
+  pull         = "always"
 }
 ```
 
@@ -35,6 +36,7 @@ resource "awx_execution_environment" "example" {
 - `credential` (String) The credential used to access the execution environment.
 - `description` (String) The description of the execution environment.
 - `organization` (String) The organization that the execution environment belongs to.
+- `pull` (String) Pull image before running?
 
 ### Read-Only
 

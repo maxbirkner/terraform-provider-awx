@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
 	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
@@ -52,6 +53,13 @@ func resourceExecutionEnvironment() *schema.Resource {
 				Default:     "",
 				Description: "The credential used to access the execution environment.",
 			},
+			"pull": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "",
+				Description:  "Pull image before running?",
+				ValidateFunc: validation.StringInSlice([]string{"", "always", "missing", "never"}, false),
+			},
 		},
 	}
 }
@@ -67,6 +75,7 @@ func resourceExecutionEnvironmentsCreate(ctx context.Context, d *schema.Resource
 		"description":  d.Get("description").(string),
 		"organization": utils.AtoiDefault(d.Get("organization").(string), nil),
 		"credential":   utils.AtoiDefault(d.Get("credential").(string), nil),
+		"pull":         d.Get("pull").(string),
 	}, map[string]string{})
 	if err != nil {
 		log.Printf("Fail to Create ExecutionEnvironment %v", err)
@@ -102,6 +111,7 @@ func resourceExecutionEnvironmentsUpdate(ctx context.Context, d *schema.Resource
 		"description":  d.Get("description").(string),
 		"organization": utils.AtoiDefault(d.Get("organization").(string), nil),
 		"credential":   utils.AtoiDefault(d.Get("credential").(string), nil),
+		"pull":         d.Get("pull").(string),
 	}, map[string]string{}); err != nil {
 		return utils.DiagUpdate(diagExecutionEnvironmentTitle, id, err)
 	}
@@ -156,6 +166,9 @@ func setExecutionEnvironmentsResourceData(d *schema.ResourceData, r *awx.Executi
 	}
 	if err := d.Set("credential", r.Credential); err != nil {
 		fmt.Println("Error setting credential", err)
+	}
+	if err := d.Set("pull", r.Pull); err != nil {
+		fmt.Println("Error setting pull", err)
 	}
 	d.SetId(strconv.Itoa(r.ID))
 	return d
