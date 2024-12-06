@@ -688,7 +688,7 @@ type JobEvent struct {
 // User represents an user.
 type User struct {
 	ID              int         `json:"id"`
-	Type            string      `json:"string"`
+	Type            string      `json:"type"`
 	URL             string      `json:"url"`
 	Related         *Related    `json:"related"`
 	SummaryFields   *Summary    `json:"summary_fields"`
