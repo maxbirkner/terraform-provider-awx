@@ -1,3 +1,10 @@
+# [0.29.0](https://github.com/denouche/terraform-provider-awx/compare/v0.28.0...v0.29.0) (2024-12-14)
+
+
+### Features
+
+* add workflow job templates resource ([#84](https://github.com/denouche/terraform-provider-awx/issues/84)) ([6b8e0e3](https://github.com/denouche/terraform-provider-awx/commit/6b8e0e39f7d475bf630bd0d9f6ff03ed35a33100)), closes [#83](https://github.com/denouche/terraform-provider-awx/issues/83)
+
 # [0.28.0](https://github.com/denouche/terraform-provider-awx/compare/v0.27.0...v0.28.0) (2024-12-10)
 
 
