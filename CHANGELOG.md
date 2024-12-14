@@ -1,3 +1,5 @@
+## [0.29.1](https://github.com/denouche/terraform-provider-awx/compare/v0.29.0...v0.29.1) (2024-12-14)
+
 # [0.29.0](https://github.com/denouche/terraform-provider-awx/compare/v0.28.0...v0.29.0) (2024-12-14)
 
 
