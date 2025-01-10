@@ -1,6 +1,6 @@
 # Terraform Provider AWX
 
-_Fork from [denouche/terraform-provider-awx](https://github.com/denouche/terraform-provider-awx) for develop additional functions.
+_Fork from [denouche/terraform-provider-awx](https://github.com/denouche/terraform-provider-awx) for development of additional functions.
 
 Coming soon.
 
