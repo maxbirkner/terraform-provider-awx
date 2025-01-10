@@ -1,3 +1,5 @@
+## [1.0.1](https://github.com/maxbirkner/terraform-provider-awx/compare/v1.0.0...v1.0.1) (2025-01-10)
+
 # 1.0.0 (2025-01-10)
 
 
