@@ -129,6 +129,11 @@ func TestNormalizeJsonYaml(t *testing.T) {
 			expected: "key: value\n",
 		},
 		{
+			name:     "Valid quoted YAML",
+			input:    `"key": "value"`,
+			expected: "key: value\n",
+		},
+		{
 			name:     "Invalid JSON",
 			input:    `{"key": "value"`,
 			expected: "{\"key\": \"value\"",

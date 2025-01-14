@@ -1,14 +1,15 @@
 /*
 *TBD*
 
-Example Usage
+# Example Usage
 
 ```hcl
-resource "awx_execution_environment" "default" {
-  name            = "acc-test"
-}
-```
 
+	resource "awx_execution_environment" "default" {
+	  name            = "acc-test"
+	}
+
+```
 */
 package awx
 
@@ -75,7 +76,7 @@ func resourceExecutionEnvironmentsCreate(ctx context.Context, d *schema.Resource
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create ExecutionEnvironments",
-			Detail:   fmt.Sprintf("ExecutionEnvironments with name, failed to create %s", d.Get("name").(string), err.Error()),
+			Detail:   fmt.Sprintf("ExecutionEnvironments with name, failed to create %s: %s", d.Get("name").(string), err.Error()),
 		})
 		return diags
 	}
