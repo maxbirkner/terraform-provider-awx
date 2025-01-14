@@ -39,7 +39,7 @@ find ./dist/terraform-provider-awx_linux_amd64/* -name 'terraform-provider-awx*'
 ### 4) Run tests and ensure they're all passing
 
 ```sh
-go test ./test -count=1
+go test ./... -count=1
 ```
 
 ### Optional: All in one command
@@ -50,7 +50,7 @@ For convenience, all the steps above can be achieved by a single command that co
 goreleaser build --snapshot --rm-dist \
     && mkdir -p ~/.terraform.d/plugins/github.com/denouche/awx/0.1/linux_amd64/ \
     && find ./dist/terraform-provider-awx_linux_amd64/* -name 'terraform-provider-awx*' -print0 | xargs -0 -I {} mv {} ~/.terraform.d/plugins/github.com/denouche/awx/0.1/linux_amd64/terraform-provider-awx \
-    && go test ./test -count=1
+    && go test ./... -count=1
 ```
 
 ## Update documentation
