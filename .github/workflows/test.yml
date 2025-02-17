@@ -9,6 +9,8 @@ on:
       - "README.md"
       - "develop/README.md"
   push:
+    branches:
+      - "main"
     paths-ignore:
       - "README.md"
       - "develop/README.md"
