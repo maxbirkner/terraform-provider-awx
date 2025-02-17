@@ -11,7 +11,7 @@ linters:
     - gosec
     - gosimple
     - govet
-    - exportloopref
+    - copyloopvar
     - unconvert
     - unused
     - asciicheck
