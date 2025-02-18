@@ -204,6 +204,9 @@ func resourceJobTemplate() *schema.Resource {
 				Description: "The selected execution environment that this playbook will be run in.",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
