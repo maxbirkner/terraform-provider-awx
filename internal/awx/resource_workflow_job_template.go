@@ -102,6 +102,9 @@ func resourceWorkflowJobTemplate() *schema.Resource {
 				Default:  "",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
