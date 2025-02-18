@@ -342,6 +342,9 @@ func setJobTemplateResourceData(d *schema.ResourceData, r *awx.JobTemplate) *sch
 	if err := d.Set("ask_limit_on_launch", r.AskLimitOnLaunch); err != nil {
 		fmt.Println("Error setting ask_limit_on_launch", err)
 	}
+	if err := d.Set("ask_scm_branch_on_launch", r.AskScmBranchOnLaunch); err != nil {
+		fmt.Println("Error setting ask_scm_branch_on_launch", err)
+	}
 	if err := d.Set("ask_skip_tags_on_launch", r.AskSkipTagsOnLaunch); err != nil {
 		fmt.Println("Error setting ask_skip_tags_on_launch", err)
 	}
