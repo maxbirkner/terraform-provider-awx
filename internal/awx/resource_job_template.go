@@ -131,6 +131,11 @@ func resourceJobTemplate() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"ask_scm_branch_on_launch": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"ask_tags_on_launch": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -225,6 +230,7 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, m in
 		"ask_diff_mode_on_launch":  d.Get("ask_diff_mode_on_launch").(bool),
 		"ask_variables_on_launch":  d.Get("ask_variables_on_launch").(bool),
 		"ask_limit_on_launch":      d.Get("ask_limit_on_launch").(bool),
+		"ask_scm_branch_on_launch": d.Get("ask_scm_branch_on_launch").(bool),
 		"ask_tags_on_launch":       d.Get("ask_tags_on_launch").(bool),
 		"ask_skip_tags_on_launch":  d.Get("ask_skip_tags_on_launch").(bool),
 		"ask_job_type_on_launch":   d.Get("ask_job_type_on_launch").(bool),
@@ -279,6 +285,7 @@ func resourceJobTemplateUpdate(ctx context.Context, d *schema.ResourceData, m in
 		"ask_diff_mode_on_launch":  d.Get("ask_diff_mode_on_launch").(bool),
 		"ask_variables_on_launch":  d.Get("ask_variables_on_launch").(bool),
 		"ask_limit_on_launch":      d.Get("ask_limit_on_launch").(bool),
+		"ask_scm_branch_on_launch": d.Get("ask_scm_branch_on_launch").(bool),
 		"ask_tags_on_launch":       d.Get("ask_tags_on_launch").(bool),
 		"ask_skip_tags_on_launch":  d.Get("ask_skip_tags_on_launch").(bool),
 		"ask_job_type_on_launch":   d.Get("ask_job_type_on_launch").(bool),
