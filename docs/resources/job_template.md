@@ -57,6 +57,7 @@ resource "awx_job_template" "example" {
 - `ask_inventory_on_launch` (Boolean) Defaults to false. Whether to ask for inventory on launch. If set to false, `inventory_id` must be set.
 - `ask_job_type_on_launch` (Boolean)
 - `ask_limit_on_launch` (Boolean)
+- `ask_scm_branch_on_launch` (Boolean)
 - `ask_skip_tags_on_launch` (Boolean)
 - `ask_tags_on_launch` (Boolean)
 - `ask_variables_on_launch` (Boolean)
