@@ -474,6 +474,7 @@ type JobLaunch struct {
 	AskVariablesOnLaunch    bool              `json:"ask_variables_on_launch"`
 	AskLimitOnLaunch        bool              `json:"ask_limit_on_launch"`
 	AskTagsOnLaunch         bool              `json:"ask_tags_on_launch"`
+	AskScmBranchOnLaunch    bool              `json:"ask_scm_branch_on_launch"`
 	AskSkipTagsOnLaunch     bool              `json:"ask_skip_tags_on_launch"`
 	AskJobTypeOnLaunch      bool              `json:"ask_job_type_on_launch"`
 	AskVerbosityOnLaunch    bool              `json:"ask_verbosity_on_launch"`
@@ -535,6 +536,7 @@ type Job struct {
 	AskVariablesOnLaunch    bool              `json:"ask_variables_on_launch"`
 	AskLimitOnLaunch        bool              `json:"ask_limit_on_launch"`
 	AskTagsOnLaunch         bool              `json:"ask_tags_on_launch"`
+	AskScmBranchOnLaunch    bool              `json:"ask_scm_branch_on_launch"`
 	AskSkipTagsOnLaunch     bool              `json:"ask_skip_tags_on_launch"`
 	AskJobTypeOnLaunch      bool              `json:"ask_job_type_on_launch"`
 	AskVerbosityOnLaunch    bool              `json:"ask_verbosity_on_launch"`
