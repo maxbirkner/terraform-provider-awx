@@ -62,6 +62,7 @@ resource "awx_inventory_source" "example" {
 - `description` (String) The description of the inventory source.
 - `enabled_value` (String) The value of the variable that determines if the inventory source is enabled.
 - `enabled_var` (String) The variable that determines if the inventory source is enabled.
+- `execution_environment_id` (Number) The selected execution environment that this inventory will be run in.
 - `group_by` (String) [Obsolete] The group by for the inventory source.
 - `host_filter` (String) The host filter for the inventory source.
 - `instance_filters` (String) [Obsolete] The instance filters for the inventory source.
