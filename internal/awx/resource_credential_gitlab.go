@@ -40,6 +40,9 @@ func resourceCredentialGitlab() *schema.Resource {
 				Description: "The GitLab Personal Access Token.",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 

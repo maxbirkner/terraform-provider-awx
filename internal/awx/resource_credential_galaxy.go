@@ -50,6 +50,9 @@ func resourceCredentialGalaxy() *schema.Resource {
 				Description: "The API token for the Ansible Galaxy/Automation Hub API.",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 

@@ -244,6 +244,9 @@ func resourceJobTemplate() *schema.Resource {
 				Default:  false,
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 

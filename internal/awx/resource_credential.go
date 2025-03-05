@@ -47,6 +47,9 @@ func resourceCredential() *schema.Resource {
 				Description: "The inputs to be created with the credential.",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
