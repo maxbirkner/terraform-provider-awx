@@ -47,6 +47,9 @@ func resourceCredentialInputSource() *schema.Resource {
 				Description: "Metadata for the input source",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
