@@ -865,7 +865,7 @@ type WorkflowJobTemplate struct {
 	SurveyEnabled        bool        `json:"survey_enabled"`
 	AllowSimultaneous    bool        `json:"allow_simultaneous"`
 	AskVariablesOnLaunch bool        `json:"ask_variables_on_launch"`
-	Inventory            int         `json:"inventory"`
+	Inventory            *int        `json:"inventory"`
 	Limit                interface{} `json:"limit"`
 	ScmBranch            interface{} `json:"scm_branch"`
 	AskInventoryOnLaunch bool        `json:"ask_inventory_on_launch"`
