@@ -415,15 +415,14 @@ type JobTemplate struct {
 	AskJobSliceCountOnLaunch        bool        `json:"ask_job_slice_count_on_launch"`
 	AskTimeoutOnLaunch              bool        `json:"ask_timeout_on_launch"`
 	AskInstanceGroupsOnLaunch       bool        `json:"ask_instance_groups_on_launch"`
-
-	SurveyEnabled        bool        `json:"survey_enabled"`
-	BecomeEnabled        bool        `json:"become_enabled"`
-	DiffMode             bool        `json:"diff_mode"`
-	AllowSimultaneous    bool        `json:"allow_simultaneous"`
-	CustomVirtualenv     interface{} `json:"custom_virtualenv"`
-	Credential           int         `json:"credential"`
-	VaultCredential      interface{} `json:"vault_credential"`
-	ExecutionEnvironment int         `json:"execution_environment"`
+	SurveyEnabled                   bool        `json:"survey_enabled"`
+	BecomeEnabled                   bool        `json:"become_enabled"`
+	DiffMode                        bool        `json:"diff_mode"`
+	AllowSimultaneous               bool        `json:"allow_simultaneous"`
+	CustomVirtualenv                interface{} `json:"custom_virtualenv"`
+	Credential                      int         `json:"credential"`
+	VaultCredential                 interface{} `json:"vault_credential"`
+	ExecutionEnvironment            int         `json:"execution_environment"`
 }
 
 // JobLaunch represents the awx api job launch.
@@ -940,4 +939,22 @@ type ExecutionEnvironment struct {
 	Managed       bool      `json:"managed"`
 	Credential    int       `json:"credential"`
 	Pull          string    `json:"pull"`
+}
+
+type SurveySpec struct {
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Spec        []*Spec `json:"spec"`
+}
+
+type Spec struct {
+	Type                string   `json:"type"`
+	QuestionName        string   `json:"question_name"`
+	QuestionDescription string   `json:"question_description"`
+	Variable            string   `json:"variable"`
+	Required            bool     `json:"required"`
+	Default             string   `json:"default"`
+	Min                 int      `json:"min"`
+	Max                 int      `json:"max"`
+	Choices             []string `json:"choices"`
 }
