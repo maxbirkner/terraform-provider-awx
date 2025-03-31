@@ -3,7 +3,6 @@ package awx
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -145,14 +144,9 @@ func resourceSurveySpecRead(isWorkflow bool) func(_ context.Context, d *schema.R
 }
 
 func resourceSurveySpecCreate(isWorkflow bool) func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	return func(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	return func(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 		client := m.(*awx.AWX)
 		jobTemplateID := d.Get("job_template_id").(int)
-
-		spec := d.Get("spec").([]interface{})
-		for i := 0; i < len(spec); i++ {
-			tflog.Info(ctx, fmt.Sprintf("spec: %+v", spec))
-		}
 
 		_, err := client.SurveySpecService.CreateSurveySpec(isWorkflow, jobTemplateID, map[string]interface{}{
 			"name":        d.Get("name").(string),
