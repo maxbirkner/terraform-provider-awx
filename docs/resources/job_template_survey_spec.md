@@ -20,7 +20,7 @@ Resource `awx_job_template_survey_spec` manages job templates surveys within AWX
 - `description` (String) The description of the job template survey spec.
 - `job_template_id` (Number) The ID of the Job Template to which create the survey spec.
 - `name` (String) The name of the Job Template survey spec.
-- `spec` (Block Set, Min: 1) Spec of the job template survey. One block per question in the survey. (see [below for nested schema](#nestedblock--spec))
+- `spec` (Block List, Min: 1) Spec of the job template survey. One block per question in the survey. (see [below for nested schema](#nestedblock--spec))
 
 ### Read-Only
 
