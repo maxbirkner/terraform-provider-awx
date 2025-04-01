@@ -53,7 +53,7 @@ func resourceSurveySpec(isWorkflow bool) *schema.Resource {
 				Description: "The description of the job template survey spec.",
 			},
 			"spec": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Description: "Spec of the job template survey. One block per question in the survey.",
 				Required:    true,
 				Elem: &schema.Resource{
@@ -151,7 +151,7 @@ func resourceSurveySpecCreate(isWorkflow bool) func(ctx context.Context, d *sche
 		_, err := client.SurveySpecService.CreateSurveySpec(isWorkflow, jobTemplateID, map[string]interface{}{
 			"name":        d.Get("name").(string),
 			"description": d.Get("description").(string),
-			"spec":        d.Get("spec").(*schema.Set).List(),
+			"spec":        d.Get("spec").([]interface{}),
 		})
 		if err != nil {
 			return utils.DiagCreate(diagSurveySpecTitle, err)
