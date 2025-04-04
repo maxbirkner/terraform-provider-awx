@@ -100,6 +100,7 @@ func Provider() *schema.Provider { //nolint:funlen
 			"awx_workflow_job_template_node_failure":                  resourceWorkflowJobTemplateNodeFailure(),
 			"awx_workflow_job_template_node_success":                  resourceWorkflowJobTemplateNodeSuccess(),
 			"awx_workflow_job_template_node":                          resourceWorkflowJobTemplateNode(),
+			"awx_workflow_job_template_node_link":                     resourceWorkflowJobTemplateNodeLink(),
 			"awx_workflow_job_template":                               resourceWorkflowJobTemplate(),
 			"awx_workflow_job_template_survey_spec":                   resourceSurveySpec(true),
 			"awx_workflow_job_template_schedule":                      resourceWorkflowJobTemplateSchedule(),

@@ -21,12 +21,9 @@ func resourceWorkflowJobTemplateNode() *schema.Resource {
 		DeleteContext: resourceWorkflowJobTemplateNodeDelete,
 
 		Schema: map[string]*schema.Schema{
-
 			"extra_data": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeMap,
 				Optional:    true,
-				Default:     "",
-				StateFunc:   utils.Normalize,
 				Description: "Extra data for the workflow job template node.",
 			},
 			"inventory_id": {
@@ -133,7 +130,7 @@ func resourceWorkflowJobTemplateNodeCreate(ctx context.Context, d *schema.Resour
 	awxService := client.WorkflowJobTemplateNodeService
 
 	result, err := awxService.CreateWorkflowJobTemplateNode(map[string]interface{}{
-		"extra_data":            d.Get("extra_data").(string),
+		"extra_data":            d.Get("extra_data"),
 		"inventory":             d.Get("inventory_id").(int),
 		"scm_branch":            d.Get("scm_branch").(string),
 		"skip_tags":             d.Get("skip_tags").(string),
@@ -178,7 +175,7 @@ func resourceWorkflowJobTemplateNodeUpdate(ctx context.Context, d *schema.Resour
 	}
 
 	if _, err := client.WorkflowJobTemplateNodeService.UpdateWorkflowJobTemplateNode(id, map[string]interface{}{
-		"extra_data":            d.Get("extra_data").(string),
+		"extra_data":            d.Get("extra_data"),
 		"inventory":             d.Get("inventory_id").(int),
 		"scm_branch":            d.Get("scm_branch").(string),
 		"skip_tags":             d.Get("skip_tags").(string),
@@ -233,7 +230,7 @@ func resourceWorkflowJobTemplateNodeDelete(_ context.Context, d *schema.Resource
 
 func setWorkflowJobTemplateNodeResourceData(d *schema.ResourceData, r *awx.WorkflowJobTemplateNode) *schema.ResourceData {
 
-	if err := d.Set("extra_data", utils.Normalize(r.ExtraData)); err != nil {
+	if err := d.Set("extra_data", r.ExtraData); err != nil {
 		fmt.Println("Error setting extra_data", err)
 	}
 	if err := d.Set("inventory_id", strconv.Itoa(r.Inventory)); err != nil {
