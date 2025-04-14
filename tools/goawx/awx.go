@@ -37,6 +37,7 @@ type AWX struct {
 	OrganizationsService                            *OrganizationsService
 	ScheduleService                                 *SchedulesService
 	SettingService                                  *SettingService
+	SurveySpecService                               *SurveySpecService
 	TeamService                                     *TeamService
 	WorkflowJobTemplateScheduleService              *WorkflowJobTemplateScheduleService
 	WorkflowJobTemplateService                      *WorkflowJobTemplateService
@@ -143,6 +144,9 @@ func newAWX(c *Client) *AWX { //nolint: funlen
 			client: c,
 		},
 		JobTemplateService: &JobTemplateService{
+			client: c,
+		},
+		SurveySpecService: &SurveySpecService{
 			client: c,
 		},
 		JobTemplateNotificationTemplatesService: &JobTemplateNotificationTemplatesService{
