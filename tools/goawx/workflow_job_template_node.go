@@ -149,50 +149,47 @@ func (jt *WorkflowJobTemplateNodeService) DeleteWorkflowJobTemplateNode(id int) 
 func (jt *WorkflowJobTemplateNodeService) AssociateNode(originNodeID int, nextNodeID int, linkType string) error {
 	endpoint := fmt.Sprintf("%s/%d/%s_nodes/", workflowJobTemplateNodeAPIEndpoint, originNodeID, linkType)
 
-	data := map[string]interface{}{
-		"id":        nextNodeID,
-		"associate": true,
-	}
-	mandatoryFields = []string{"id", "associate"}
-	validate, status := ValidateParams(data, mandatoryFields)
-	if !status {
-		err := fmt.Errorf("mandatory input arguments are absent: %s", validate)
-		return err
-	}
-
-	payload, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	resp, err := jt.client.Requester.PostJSON(endpoint, bytes.NewReader(payload), nil, nil)
-	if resp != nil {
-		func() {
-			if err := resp.Body.Close(); err != nil {
-				fmt.Println(err)
-			}
-		}()
-	}
-	if err != nil {
-		return err
-	}
-
-	if err := CheckResponse(resp); err != nil {
-		return err
-	}
-
-	return nil
+	return associateOrDisassociate(nextNodeID, jt, endpoint, true)
 }
 
-// DisassociateNode associate a node to another node, with a link of
+// DisassociateNode disassociate a node to another node, with a link of type "success", "failure", or "always"
 func (jt *WorkflowJobTemplateNodeService) DisassociateNode(originNodeID int, nextNodeID int, linkType string) error {
 	endpoint := fmt.Sprintf("%s/%d/%s_nodes/", workflowJobTemplateNodeAPIEndpoint, originNodeID, linkType)
 
-	data := map[string]interface{}{
-		"id":           nextNodeID,
-		"disassociate": true,
+	return associateOrDisassociate(nextNodeID, jt, endpoint, false)
+}
+
+// AssociateCredential associate a credential to a node
+func (jt *WorkflowJobTemplateNodeService) AssociateCredential(nodeID int, credentialID int) error {
+	endpoint := fmt.Sprintf("%s/%d/credentials", workflowJobTemplateNodeAPIEndpoint, nodeID)
+
+	return associateOrDisassociate(credentialID, jt, endpoint, true)
+}
+
+// DisassociateCredential disassociate a credential from a node
+func (jt *WorkflowJobTemplateNodeService) DisassociateCredential(nodeID int, credentialID int) error {
+	endpoint := fmt.Sprintf("%s/%d/credentials", workflowJobTemplateNodeAPIEndpoint, nodeID)
+
+	return associateOrDisassociate(credentialID, jt, endpoint, false)
+}
+
+func associateOrDisassociate(id int, jt *WorkflowJobTemplateNodeService, endpoint string, associate bool) error {
+	associateOrDisassociate := ""
+
+	if associate {
+		associateOrDisassociate = "associate"
+	} else {
+		associateOrDisassociate = "disassociate"
 	}
-	mandatoryFields = []string{"id", "disassociate"}
+
+	data := map[string]interface{}{
+		"id":                    id,
+		associateOrDisassociate: true,
+	}
+
+	mandatoryFields = []string{"id", associateOrDisassociate}
 	validate, status := ValidateParams(data, mandatoryFields)
+
 	if !status {
 		err := fmt.Errorf("mandatory input arguments are absent: %s", validate)
 		return err
