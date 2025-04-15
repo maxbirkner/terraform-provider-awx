@@ -875,29 +875,29 @@ type WorkflowJobTemplate struct {
 
 // WorkflowJobTemplateNode represents the awx api workflow job template node.
 type WorkflowJobTemplateNode struct {
-	ID                     int       `json:"id"`
-	Type                   string    `json:"type"`
-	URL                    string    `json:"url"`
-	Related                *Related  `json:"related"`
-	SummaryFields          *Summary  `json:"summary_fields"`
-	Created                time.Time `json:"created"`
-	Modified               time.Time `json:"modified"`
-	ExtraData              string    `json:"extra_data"`
-	Inventory              int       `json:"inventory"`
-	ScmBranch              string    `json:"scm_branch"`
-	JobType                string    `json:"job_type"`
-	JobTags                string    `json:"job_tags"`
-	SkipTags               string    `json:"skip_tags"`
-	Limit                  string    `json:"limit"`
-	DiffMode               bool      `json:"diff_mode"`
-	Verbosity              int       `json:"verbosity"`
-	WorkflowJobTemplate    int       `json:"workflow_job_template"`
-	UnifiedJobTemplate     int       `json:"unified_job_template"`
-	SuccessNodes           []int     `json:"success_nodes"`
-	FailureNodes           []int     `json:"failure_nodes"`
-	AlwaysNodes            []int     `json:"always_nodes"`
-	AllParentsMustConverge bool      `json:"all_parents_must_converge"`
-	Identifier             string    `json:"identifier"`
+	ID                     int                    `json:"id"`
+	Type                   string                 `json:"type"`
+	URL                    string                 `json:"url"`
+	Related                *Related               `json:"related"`
+	SummaryFields          *Summary               `json:"summary_fields"`
+	Created                time.Time              `json:"created"`
+	Modified               time.Time              `json:"modified"`
+	ExtraData              map[string]interface{} `json:"extra_data"`
+	Inventory              int                    `json:"inventory"`
+	ScmBranch              string                 `json:"scm_branch"`
+	JobType                string                 `json:"job_type"`
+	JobTags                string                 `json:"job_tags"`
+	SkipTags               string                 `json:"skip_tags"`
+	Limit                  string                 `json:"limit"`
+	DiffMode               bool                   `json:"diff_mode"`
+	Verbosity              int                    `json:"verbosity"`
+	WorkflowJobTemplate    int                    `json:"workflow_job_template"`
+	UnifiedJobTemplate     int                    `json:"unified_job_template"`
+	SuccessNodes           []int                  `json:"success_nodes"`
+	FailureNodes           []int                  `json:"failure_nodes"`
+	AlwaysNodes            []int                  `json:"always_nodes"`
+	AllParentsMustConverge bool                   `json:"all_parents_must_converge"`
+	Identifier             string                 `json:"identifier"`
 }
 
 // Schedule : represents the awx api schedule.
