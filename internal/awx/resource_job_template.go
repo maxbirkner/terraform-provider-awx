@@ -167,11 +167,6 @@ func resourceJobTemplate() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"ask_scm_branch_on_launch": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"ask_execution_environment_on_launch": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -248,9 +243,6 @@ func resourceJobTemplate() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-		},
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -427,9 +419,6 @@ func setJobTemplateResourceData(d *schema.ResourceData, r *awx.JobTemplate) *sch
 	}
 	if err := d.Set("ask_variables_on_launch", r.AskVariablesOnLaunch); err != nil {
 		fmt.Println("Error setting ask_variables_on_launch", err)
-	}
-	if err := d.Set("ask_scm_branch_on_launch", r.AskScmBranchOnLaunch); err != nil {
-		fmt.Println("Error setting ask_scm_branch_on_launch", err)
 	}
 	if err := d.Set("ask_diff_mode_on_launch", r.AskDiffModeOnLaunch); err != nil {
 		fmt.Println("Error setting ask_diff_mode_on_launch", err)
