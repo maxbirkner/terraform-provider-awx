@@ -100,7 +100,7 @@ func resourceInventorySource() *schema.Resource {
 				Optional:    true,
 				Description: "The verbosity for the inventory source. [0,1,2,3]",
 			},
-			"execution_environment_id": {
+			"execution_environment": {
 				Type:        schema.TypeInt,
 				Optional:    true,
 				Description: "The selected execution environment that this inventory will be run in.",
@@ -156,7 +156,7 @@ func resourceInventorySourceCreate(ctx context.Context, d *schema.ResourceData, 
 		"host_filter":              d.Get("host_filter").(string),
 		"update_cache_timeout":     d.Get("update_cache_timeout").(int),
 		"verbosity":                d.Get("verbosity").(int),
-		"execution_environment_id": d.Get("execution_environment_id").(int),
+		"execution_environment":    d.Get("execution_environment").(int),
 		// obsolete schema added so terraform doesn't break
 		// these don't do anything in later versions of AWX! Update your code.
 		"source_regions":   d.Get("source_regions").(string),
@@ -203,7 +203,7 @@ func resourceInventorySourceUpdate(ctx context.Context, d *schema.ResourceData, 
 		"host_filter":              d.Get("host_filter").(string),
 		"update_cache_timeout":     d.Get("update_cache_timeout").(int),
 		"verbosity":                d.Get("verbosity").(int),
-		"execution_environment_id": d.Get("execution_environment_id").(int),
+		"execution_environment":    d.Get("execution_environment").(int),
 		// obsolete schema added so terraform doesn't break
 		// these don't do anything in later versions of AWX! Update your code.
 		"source_regions":   d.Get("source_regions").(string),
@@ -295,8 +295,8 @@ func setInventorySourceResourceData(d *schema.ResourceData, r *awx.InventorySour
 	if err := d.Set("verbosity", r.Verbosity); err != nil {
 		fmt.Println("Error setting verbosity", err)
 	}
-	if err := d.Set("execution_environment_id", r.ExecutionEnvironment); err != nil {
-		fmt.Println("Error setting execution_environment_id", err)
+	if err := d.Set("execution_environment", r.ExecutionEnvironment); err != nil {
+		fmt.Println("Error setting execution_environment", err)
 	}
 	if err := d.Set("source_project_id", r.SourceProject); err != nil {
 		fmt.Println("Error setting source_project_id", err)
