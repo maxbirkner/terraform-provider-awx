@@ -136,11 +136,6 @@ func resourceJobTemplate() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"ask_scm_branch_on_launch": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"ask_tags_on_launch": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -248,9 +243,6 @@ func resourceJobTemplate() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-		},
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -415,9 +407,6 @@ func setJobTemplateResourceData(d *schema.ResourceData, r *awx.JobTemplate) *sch
 	}
 	if err := d.Set("ask_limit_on_launch", r.AskLimitOnLaunch); err != nil {
 		fmt.Println("Error setting ask_limit_on_launch", err)
-	}
-	if err := d.Set("ask_scm_branch_on_launch", r.AskScmBranchOnLaunch); err != nil {
-		fmt.Println("Error setting ask_scm_branch_on_launch", err)
 	}
 	if err := d.Set("ask_skip_tags_on_launch", r.AskSkipTagsOnLaunch); err != nil {
 		fmt.Println("Error setting ask_skip_tags_on_launch", err)
