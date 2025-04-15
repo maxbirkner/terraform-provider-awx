@@ -163,6 +163,10 @@ func (r *Requester) ReadRawResponse(response *http.Response, responseStruct inte
 
 // ReadJSONResponse reads the http raw response and decodes into json.
 func (r *Requester) ReadJSONResponse(response *http.Response, responseStruct interface{}) (*http.Response, error) {
+	if response.ContentLength == 0 {
+		return response, nil
+	}
+
 	defer func() {
 		if err := response.Body.Close(); err != nil {
 			fmt.Println(err)

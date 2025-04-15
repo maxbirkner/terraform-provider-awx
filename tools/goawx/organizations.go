@@ -137,10 +137,45 @@ func (p *OrganizationsService) DeleteOrganization(id int) (*Organization, error)
 	return result, nil
 }
 
-// DisAssociateGalaxyCredentials remove Credentials form an awx job template.
-func (p *OrganizationsService) DisAssociateGalaxyCredentials(id int, data map[string]interface{}, _ map[string]string) (*Organization, error) {
+// associate associate an element to an organization.
+func (p *OrganizationsService) associate(id int, typ string, data map[string]interface{}, _ map[string]string) (*Organization, error) {
 	result := new(Organization)
-	endpoint := fmt.Sprintf("%s%d/galaxy_credentials/", organizationsAPIEndpoint, id)
+
+	endpoint := fmt.Sprintf("%s%d/%s/", organizationsAPIEndpoint, id, typ)
+	data["associate"] = true
+	mandatoryFields = []string{"id"}
+	validate, status := ValidateParams(data, mandatoryFields)
+	if !status {
+		err := fmt.Errorf("mandatory input arguments are absent: %s", validate)
+		return nil, err
+	}
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := p.client.Requester.PostJSON(endpoint, bytes.NewReader(payload), result, nil)
+	if resp != nil {
+		func() {
+			if err := resp.Body.Close(); err != nil {
+				fmt.Println(err)
+			}
+		}()
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if err := CheckResponse(resp); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// disAssociate remove element from an organization
+func (p *OrganizationsService) disAssociate(id int, typ string, data map[string]interface{}, _ map[string]string) (*Organization, error) {
+	result := new(Organization)
+	endpoint := fmt.Sprintf("%s%d/%s/", organizationsAPIEndpoint, id, typ)
 	data["disassociate"] = true
 	mandatoryFields = []string{"id", "disassociate"}
 	validate, status := ValidateParams(data, mandatoryFields)
@@ -171,39 +206,24 @@ func (p *OrganizationsService) DisAssociateGalaxyCredentials(id int, data map[st
 	return result, nil
 }
 
+// DisAssociateGalaxyCredentials remove Credentials form an awx job template.
+func (p *OrganizationsService) DisAssociateGalaxyCredentials(id int, data map[string]interface{}, params map[string]string) (*Organization, error) {
+	return p.disAssociate(id, "galaxy_credentials", data, params)
+}
+
 // AssociateGalaxyCredentials adding credentials to Organization.
-func (p *OrganizationsService) AssociateGalaxyCredentials(id int, data map[string]interface{}, _ map[string]string) (*Organization, error) {
-	result := new(Organization)
+func (p *OrganizationsService) AssociateGalaxyCredentials(id int, data map[string]interface{}, params map[string]string) (*Organization, error) {
+	return p.associate(id, "galaxy_credentials", data, params)
+}
 
-	endpoint := fmt.Sprintf("%s%d/galaxy_credentials/", organizationsAPIEndpoint, id)
-	data["associate"] = true
-	mandatoryFields = []string{"id"}
-	validate, status := ValidateParams(data, mandatoryFields)
-	if !status {
-		err := fmt.Errorf("mandatory input arguments are absent: %s", validate)
-		return nil, err
-	}
-	payload, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := p.client.Requester.PostJSON(endpoint, bytes.NewReader(payload), result, nil)
-	if resp != nil {
-		func() {
-			if err := resp.Body.Close(); err != nil {
-				fmt.Println(err)
-			}
-		}()
-	}
-	if err != nil {
-		return nil, err
-	}
+// DisAssociateInstanceGroups remove Instance Groups from an organization
+func (p *OrganizationsService) DisAssociateInstanceGroups(id int, data map[string]interface{}, params map[string]string) (*Organization, error) {
+	return p.disAssociate(id, "instance_groups", data, params)
+}
 
-	if err := CheckResponse(resp); err != nil {
-		return nil, err
-	}
-
-	return result, nil
+// AssociateGalaxyCredentials adding Instance Groups to Organization.
+func (p *OrganizationsService) AssociateInstanceGroups(id int, data map[string]interface{}, params map[string]string) (*Organization, error) {
+	return p.associate(id, "instance_groups", data, params)
 }
 
 // Must be replaced by a generic function.

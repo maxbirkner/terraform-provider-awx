@@ -65,7 +65,7 @@ func (jt *JobTemplateService) ListJobTemplates(params map[string]string) ([]*Job
 	return result.Results, result, nil
 }
 
-// Launch lauchs a job with the job template.
+// Launch launches a job with the job template.
 func (jt *JobTemplateService) Launch(id int, data map[string]interface{}, params map[string]string) (*JobLaunch, error) {
 	result := new(JobLaunch)
 	endpoint := fmt.Sprintf("%s%d/launch/", jobTemplateAPIEndpoint, id)
