@@ -252,6 +252,13 @@ func resourceJobTemplate() *schema.Resource {
 
 func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
+
+	limitVal := d.Get("limit").(string)
+	var limitPayload *string
+	if limitVal != "" {
+		limitPayload = &limitVal
+	}
+
 	result, err := client.JobTemplateService.CreateJobTemplate(map[string]interface{}{
 		"name":                                d.Get("name").(string),
 		"description":                         d.Get("description").(string),
@@ -261,7 +268,7 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, m in
 		"playbook":                            d.Get("playbook").(string),
 		"scm_branch":                          d.Get("scm_branch").(string),
 		"forks":                               d.Get("forks").(int),
-		"limit":                               d.Get("limit").(string),
+		"limit":                               limitPayload,
 		"verbosity":                           d.Get("verbosity").(int),
 		"extra_vars":                          d.Get("extra_vars").(string),
 		"job_tags":                            d.Get("job_tags").(string),
@@ -315,6 +322,12 @@ func resourceJobTemplateUpdate(ctx context.Context, d *schema.ResourceData, m in
 		return utils.DiagNotFound(diagJobTemplateTitle, id, err)
 	}
 
+	limitVal := d.Get("limit").(string)
+	var limitPayload *string
+	if limitVal != "" {
+		limitPayload = &limitVal
+	}
+
 	if _, err := client.JobTemplateService.UpdateJobTemplate(id, map[string]interface{}{
 		"name":                                d.Get("name").(string),
 		"description":                         d.Get("description").(string),
@@ -324,7 +337,7 @@ func resourceJobTemplateUpdate(ctx context.Context, d *schema.ResourceData, m in
 		"playbook":                            d.Get("playbook").(string),
 		"scm_branch":                          d.Get("scm_branch").(string),
 		"forks":                               d.Get("forks").(int),
-		"limit":                               d.Get("limit").(string),
+		"limit":                               limitPayload,
 		"verbosity":                           d.Get("verbosity").(int),
 		"extra_vars":                          d.Get("extra_vars").(string),
 		"job_tags":                            d.Get("job_tags").(string),
@@ -486,7 +499,11 @@ func setJobTemplateResourceData(d *schema.ResourceData, r *awx.JobTemplate) *sch
 	if err := d.Set("custom_virtualenv", r.CustomVirtualenv); err != nil {
 		fmt.Println("Error setting custom_virtualenv", err)
 	}
-	if err := d.Set("limit", r.Limit); err != nil {
+	limitValue := "" // default value if API returns null or empty string
+	if r.Limit != nil {
+		limitValue = *r.Limit
+	}
+	if err := d.Set("limit", limitValue); err != nil {
 		fmt.Println("Error setting limit", err)
 	}
 	if err := d.Set("name", r.Name); err != nil {
