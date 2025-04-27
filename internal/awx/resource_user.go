@@ -2,6 +2,7 @@ package awx
 
 import (
 	"context"
+	"log" // Import the log package
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -30,6 +31,19 @@ func resourceUser() *schema.Resource {
 				Required:    true,
 				Sensitive:   true,
 				Description: "The password of the user",
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					statePassword := d.Get(k).(string) // Get current value from state using the key 'k'
+					log.Printf("[DEBUG] DiffSuppressFunc for %s: old(prior state)='%s', new(config)='%s', current state='%s'", k, old, new, statePassword)
+					// k = "password"
+					// old = value from prior state
+					// new = value from current configuration
+					// We don't read the password back from the API, so 'old' reflects the last known state.
+					// Suppress the diff only if the configuration value hasn't changed from the prior state.
+					// Return 'true' to suppress the diff if old == new.
+					suppress := statePassword == new
+					log.Printf("[DEBUG] DiffSuppressFunc for %s: suppress=%t (old == new)", k, suppress)
+					return suppress
+				},
 			},
 			"first_name": {
 				Type:        schema.TypeString,
@@ -155,15 +169,19 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			return utils.DiagUpdate("User Role Entitlement", id, err)
 		}
 	}
-	if _, err := client.UserService.UpdateUser(id, map[string]interface{}{
+	// NOTE: Password is sent on every update using the value from the state.
+	// The DiffSuppressFunc ensures d.HasChange("password") is only true when the config value differs from the state value.
+	payload := map[string]interface{}{
 		"username":          d.Get("username").(string),
-		"password":          d.Get("password").(string),
+		"password":          d.Get("password").(string), // Always send password from state
 		"first_name":        d.Get("first_name").(string),
 		"last_name":         d.Get("last_name").(string),
 		"email":             d.Get("email").(string),
 		"is_superuser":      d.Get("is_superuser").(bool),
 		"is_system_auditor": d.Get("is_system_auditor").(bool),
-	}, nil); err != nil {
+	}
+
+	if _, err := client.UserService.UpdateUser(id, payload, nil); err != nil {
 		return utils.DiagUpdate("User", id, err)
 	}
 
@@ -189,8 +207,16 @@ func resourceUserRead(_ context.Context, d *schema.ResourceData, m interface{}) 
 	if err := d.Set("username", res.Username); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("password", res.Password); err != nil {
-		return diag.FromErr(err)
+	if res.Password == "$encrypted$" {
+		statePassword := d.Get("password").(string) // Get current value from state
+		log.Printf("[DEBUG] resourceUserRead: res.Password == %s, statePassword == %s", res.Password, statePassword)
+		if err := d.Set("password", statePassword); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		if err := d.Set("password", res.Password); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 	if err := d.Set("first_name", res.FirstName); err != nil {
 		return diag.FromErr(err)
