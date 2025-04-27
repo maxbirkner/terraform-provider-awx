@@ -113,7 +113,7 @@ func resourceWorkflowJobTemplateCreate(ctx context.Context, d *schema.ResourceDa
 	client := m.(*awx.AWX)
 	awxService := client.WorkflowJobTemplateService
 
-	result, err := awxService.CreateWorkflowJobTemplate(map[string]interface{}{
+	payload := map[string]interface{}{
 		"name":                     d.Get("name").(string),
 		"description":              d.Get("description").(string),
 		"organization":             d.Get("organization_id").(int),
@@ -122,14 +122,23 @@ func resourceWorkflowJobTemplateCreate(ctx context.Context, d *schema.ResourceDa
 		"survey_enabled":           d.Get("survey_enabled").(bool),
 		"allow_simultaneous":       d.Get("allow_simultaneous").(bool),
 		"ask_variables_on_launch":  d.Get("ask_variables_on_launch").(bool),
-		"limit":                    d.Get("limit").(string),
 		"scm_branch":               d.Get("scm_branch").(string),
 		"ask_inventory_on_launch":  d.Get("ask_inventory_on_launch").(bool),
 		"ask_scm_branch_on_launch": d.Get("ask_scm_branch_on_launch").(bool),
 		"ask_limit_on_launch":      d.Get("ask_limit_on_launch").(bool),
 		"webhook_service":          d.Get("webhook_service").(string),
 		"webhook_credential":       d.Get("webhook_credential").(string),
-	}, map[string]string{})
+	}
+
+	// Workaround limitation mentioned in https://github.com/ansible/awx/issues/12991
+	limit := d.Get("limit").(string)
+	if limit == "" {
+		payload["limit"] = nil
+	} else {
+		payload["limit"] = limit
+	}
+
+	result, err := awxService.CreateWorkflowJobTemplate(payload, map[string]string{})
 	if err != nil {
 		log.Printf("Fail to Create Template %v", err)
 		diags = append(diags, diag.Diagnostic{
@@ -156,7 +165,7 @@ func resourceWorkflowJobTemplateUpdate(ctx context.Context, d *schema.ResourceDa
 		return utils.DiagNotFound("job Workflow template", id, err)
 	}
 
-	if _, err := client.WorkflowJobTemplateService.UpdateWorkflowJobTemplate(id, map[string]interface{}{
+	payload := map[string]interface{}{
 		"name":                     d.Get("name").(string),
 		"description":              d.Get("description").(string),
 		"organization":             d.Get("organization_id").(int),
@@ -165,14 +174,23 @@ func resourceWorkflowJobTemplateUpdate(ctx context.Context, d *schema.ResourceDa
 		"survey_enabled":           d.Get("survey_enabled").(bool),
 		"allow_simultaneous":       d.Get("allow_simultaneous").(bool),
 		"ask_variables_on_launch":  d.Get("ask_variables_on_launch").(bool),
-		"limit":                    d.Get("limit").(string),
 		"scm_branch":               d.Get("scm_branch").(string),
 		"ask_inventory_on_launch":  d.Get("ask_inventory_on_launch").(bool),
 		"ask_scm_branch_on_launch": d.Get("ask_scm_branch_on_launch").(bool),
 		"ask_limit_on_launch":      d.Get("ask_limit_on_launch").(bool),
 		"webhook_service":          d.Get("webhook_service").(string),
 		"webhook_credential":       d.Get("webhook_credential").(string),
-	}, map[string]string{}); err != nil {
+	}
+
+	// Workaround limitation mentioned in https://github.com/ansible/awx/issues/12991
+	limit := d.Get("limit").(string)
+	if limit == "" {
+		payload["limit"] = nil
+	} else {
+		payload["limit"] = limit
+	}
+
+	if _, err := client.WorkflowJobTemplateService.UpdateWorkflowJobTemplate(id, payload, map[string]string{}); err != nil {
 		return utils.DiagUpdate("Job Workflow template", d.Get("name").(string), err)
 	}
 
@@ -232,8 +250,19 @@ func setWorkflowJobTemplateResourceData(d *schema.ResourceData, r *awx.WorkflowJ
 	if err := d.Set("ask_variables_on_launch", r.AskVariablesOnLaunch); err != nil {
 		fmt.Println("Error setting ask_variables_on_launch", err)
 	}
-	if err := d.Set("limit", r.Limit); err != nil {
-		fmt.Println("Error setting limit", err)
+	// Workaround limitation mentioned in https://github.com/ansible/awx/issues/12991
+	if r.Limit != nil {
+		if limitStr, ok := r.Limit.(string); ok {
+			if err := d.Set("limit", limitStr); err != nil {
+				fmt.Println("Error setting limit", err)
+			}
+		} else {
+			fmt.Println("Error converting limit to string")
+		}
+	} else {
+		if err := d.Set("limit", ""); err != nil {
+			fmt.Println("Error setting limit", err)
+		}
 	}
 	if err := d.Set("scm_branch", r.ScmBranch); err != nil {
 		fmt.Println("Error setting scm_branch", err)
