@@ -1,8 +1,7 @@
 package awx
 
 import (
-	"context"
-	"log" // Import the log package
+	"context" // Import the log package
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -31,19 +30,6 @@ func resourceUser() *schema.Resource {
 				Required:    true,
 				Sensitive:   true,
 				Description: "The password of the user",
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					statePassword := d.Get(k).(string) // Get current value from state using the key 'k'
-					log.Printf("[DEBUG] DiffSuppressFunc for %s: old(prior state)='%s', new(config)='%s', current state='%s'", k, old, new, statePassword)
-					// k = "password"
-					// old = value from prior state
-					// new = value from current configuration
-					// We don't read the password back from the API, so 'old' reflects the last known state.
-					// Suppress the diff only if the configuration value hasn't changed from the prior state.
-					// Return 'true' to suppress the diff if old == new.
-					suppress := statePassword == new
-					log.Printf("[DEBUG] DiffSuppressFunc for %s: suppress=%t (old == new)", k, suppress)
-					return suppress
-				},
 			},
 			"first_name": {
 				Type:        schema.TypeString,
@@ -209,7 +195,9 @@ func resourceUserRead(_ context.Context, d *schema.ResourceData, m interface{}) 
 	}
 	if res.Password == "$encrypted$" {
 		statePassword := d.Get("password").(string) // Get current value from state
-		log.Printf("[DEBUG] resourceUserRead: res.Password == %s, statePassword == %s", res.Password, statePassword)
+		if statePassword == "$encrypted$" {
+			statePassword = "UPDATE_ME"
+		}
 		if err := d.Set("password", statePassword); err != nil {
 			return diag.FromErr(err)
 		}
