@@ -1,7 +1,7 @@
 package awx
 
 import (
-	"context" // Import the log package
+	"context"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -155,24 +155,19 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			return utils.DiagUpdate("User Role Entitlement", id, err)
 		}
 	}
-	// NOTE: Password is sent on every update using the value from the state.
-	// The DiffSuppressFunc ensures d.HasChange("password") is only true when the config value differs from the state value.
-	payload := map[string]interface{}{
+	if _, err := client.UserService.UpdateUser(id, map[string]interface{}{
 		"username":          d.Get("username").(string),
-		"password":          d.Get("password").(string), // Always send password from state
+		"password":          d.Get("password").(string),
 		"first_name":        d.Get("first_name").(string),
 		"last_name":         d.Get("last_name").(string),
 		"email":             d.Get("email").(string),
 		"is_superuser":      d.Get("is_superuser").(bool),
 		"is_system_auditor": d.Get("is_system_auditor").(bool),
-	}
-
-	if _, err := client.UserService.UpdateUser(id, payload, nil); err != nil {
+	}, nil); err != nil {
 		return utils.DiagUpdate("User", id, err)
 	}
 
 	return resourceUserRead(ctx, d, m)
-
 }
 
 func resourceUserRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -193,8 +188,10 @@ func resourceUserRead(_ context.Context, d *schema.ResourceData, m interface{}) 
 	if err := d.Set("username", res.Username); err != nil {
 		return diag.FromErr(err)
 	}
+	// The AWX API returns $encrypted$ for the password which we do not want to write to the Terraform state file
+	// as it would break diffing and cause the user to be recreated on every apply.
 	if res.Password == "$encrypted$" {
-		statePassword := d.Get("password").(string) // Get current value from state
+		statePassword := d.Get("password").(string)
 		if statePassword == "$encrypted$" {
 			statePassword = "UPDATE_ME"
 		}
