@@ -188,8 +188,8 @@ func resourceUserRead(_ context.Context, d *schema.ResourceData, m interface{}) 
 	if err := d.Set("username", res.Username); err != nil {
 		return diag.FromErr(err)
 	}
-	// The AWX API returns $encrypted$ for the password which we do not want to write to the Terraform state file
-	// as it would break diffing and cause the user to be recreated on every apply.
+	// The AWX API returns '$encrypted$' in place of the password. We do not want to write that placeholder to the
+	// Terraform state file as it would break diffing and cause the user to be recreated on every apply.
 	if res.Password == "$encrypted$" {
 		statePassword := d.Get("password").(string)
 		if statePassword == "$encrypted$" {
