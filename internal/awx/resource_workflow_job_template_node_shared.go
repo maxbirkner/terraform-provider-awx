@@ -9,17 +9,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
-	"github.com/josh-silvas/terraform-provider-awx/tools/utils"
 )
 
 var workflowJobNodeSchema = map[string]*schema.Schema{
 
 	"extra_data": {
-		Type:        schema.TypeString,
+		Type:        schema.TypeMap,
 		Optional:    true,
-		Default:     "",
 		Description: "",
-		StateFunc:   utils.Normalize,
 	},
 	"workflow_job_template_node_id": {
 		Type:        schema.TypeInt,
@@ -96,7 +93,7 @@ func createNodeForWorkflowJob(ctx context.Context, awxService *awx.WorkflowJobTe
 	var diags diag.Diagnostics
 	templateNodeID := d.Get("workflow_job_template_node_id").(int)
 	result, err := awxService.CreateWorkflowJobTemplateNodeStep(templateNodeID, map[string]interface{}{
-		"extra_data":            d.Get("extra_data").(string),
+		"extra_data":            d.Get("extra_data"),
 		"inventory":             d.Get("inventory_id").(int),
 		"scm_branch":            d.Get("scm_branch").(string),
 		"skip_tags":             d.Get("skip_tags").(string),
