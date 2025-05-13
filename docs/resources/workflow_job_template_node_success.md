@@ -77,7 +77,7 @@ resource "awx_workflow_job_template_node_success" "example" {
 
 - `all_parents_must_converge` (Boolean) Whether all parents must converge before this node can start
 - `diff_mode` (Boolean) Whether to enable diff mode for the job template.
-- `extra_data` (String)
+- `extra_data` (Map of String)
 - `inventory_id` (Number) Inventory applied as a prompt, assuming job template prompts for inventory.
 - `job_tags` (String) A list of job tags to use for the job template.
 - `job_type` (String) The type of job to run.

@@ -69,7 +69,7 @@ resource "awx_workflow_job_template_node" "example" {
 
 - `all_parents_must_converge` (Boolean)
 - `diff_mode` (Boolean) Enable diff mode for the job template.
-- `extra_data` (String) Extra data for the workflow job template node.
+- `extra_data` (Map of String) Extra data for the workflow job template node.
 - `inventory_id` (Number) Inventory applied as a prompt, assuming job template prompts for inventory.
 - `job_tags` (String) Tags to use for the job template.
 - `job_type` (String) Type of job to run.
