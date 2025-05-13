@@ -52,6 +52,9 @@ func resourceCredentialGoogleComputeEngine() *schema.Resource {
 				Description: "The SSH key data to use for the credential.",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 

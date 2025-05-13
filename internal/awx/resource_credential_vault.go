@@ -47,6 +47,9 @@ func resourceCredentialVault() *schema.Resource {
 				Description: "The vault identity to use.",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
