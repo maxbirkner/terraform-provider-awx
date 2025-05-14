@@ -129,8 +129,9 @@ func resourceCredentialAzureKeyVaultUpdate(ctx context.Context, d *schema.Resour
 		"description",
 		"url",
 		"client",
-		//"secret",
+		"secret",
 		"tenant",
+		"organization_id",
 	}
 
 	if d.HasChanges(keys...) {
@@ -139,10 +140,9 @@ func resourceCredentialAzureKeyVaultUpdate(ctx context.Context, d *schema.Resour
 			return utils.DiagUpdate("Azure Key Vault Credential", d.Id(), err)
 		}
 		payload := map[string]interface{}{
-			"name":            d.Get("name").(string),
-			"description":     d.Get("description").(string),
-			"organization":    d.Get("organization_id").(int),
-			"credential_type": 19, // Azure Key Vault
+			"name":         d.Get("name").(string),
+			"description":  d.Get("description").(string),
+			"organization": d.Get("organization_id").(int),
 			"inputs": map[string]interface{}{
 				"url":    d.Get("url").(string),
 				"client": d.Get("client").(string),
