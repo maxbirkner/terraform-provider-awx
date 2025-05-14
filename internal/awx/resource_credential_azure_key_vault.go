@@ -55,6 +55,9 @@ func resourceCredentialAzureKeyVault() *schema.Resource {
 				Description: "The tenant ID of the Azure Key Vault.",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 

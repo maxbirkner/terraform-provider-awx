@@ -58,6 +58,9 @@ func resourceCredentialContainerRegistry() *schema.Resource {
 				Description: "Verify SSL",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 

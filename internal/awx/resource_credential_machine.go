@@ -79,6 +79,9 @@ func resourceCredentialMachine() *schema.Resource {
 				Description: "The become password for the credential.",
 			},
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 	}
 }
 
