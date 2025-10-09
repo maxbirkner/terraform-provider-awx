@@ -18,6 +18,8 @@ func getResourceWorkflowJobTemplateNotificationTemplateAssociateFuncForType(clie
 		return client.AssociateWorkflowJobTemplateNotificationTemplatesSuccess
 	case "started":
 		return client.AssociateWorkflowJobTemplateNotificationTemplatesStarted
+	case "approvals":
+		return client.AssociateWorkflowJobTemplateNotificationTemplatesApprovals
 	}
 	return nil
 }
@@ -30,6 +32,8 @@ func getResourceWorkflowJobTemplateNotificationTemplateDisassociateFuncForType(c
 		return client.DisassociateWorkflowJobTemplateNotificationTemplatesSuccess
 	case "started":
 		return client.DisassociateWorkflowJobTemplateNotificationTemplatesStarted
+	case "approvals":
+		return client.DisassociateWorkflowJobTemplateNotificationTemplatesApprovals
 	}
 	return nil
 }
