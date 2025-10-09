@@ -10,6 +10,8 @@ import (
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
 )
 
+const machineCredentialTypeName = "Machine"
+
 //nolint:funlen
 func resourceCredentialMachine() *schema.Resource {
 	return &schema.Resource{
@@ -87,13 +89,23 @@ func resourceCredentialMachine() *schema.Resource {
 
 func resourceCredentialMachineCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var err error
+
+	client := m.(*awx.AWX)
+	machineCredType, err := client.CredentialTypeService.GetCredentialTypeByName(machineCredentialTypeName, map[string]string{})
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to fetch credential type",
+			Detail:   fmt.Sprintf("Unable to fetch credential type with Name: %s. Error: %s", machineCredentialTypeName, err.Error()),
+		})
+		return diags
+	}
 
 	newCredential := map[string]interface{}{
 		"name":            d.Get("name").(string),
 		"description":     d.Get("description").(string),
 		"organization":    d.Get("organization_id").(int),
-		"credential_type": 1, // SSH
+		"credential_type": machineCredType.ID,
 		"inputs": map[string]interface{}{
 			"username":            d.Get("username").(string),
 			"password":            d.Get("password").(string),
@@ -106,7 +118,6 @@ func resourceCredentialMachineCreate(ctx context.Context, d *schema.ResourceData
 		},
 	}
 
-	client := m.(*awx.AWX)
 	cred, err := client.CredentialsService.CreateCredentials(newCredential, map[string]string{})
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -195,14 +206,23 @@ func resourceCredentialMachineUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if d.HasChanges(keys...) {
-		var err error
+		client := m.(*awx.AWX)
+		machineCredType, err := client.CredentialTypeService.GetCredentialTypeByName(machineCredentialTypeName, map[string]string{})
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to fetch credential type",
+				Detail:   fmt.Sprintf("Unable to fetch credential type with Name: %s. Error: %s", machineCredentialTypeName, err.Error()),
+			})
+			return diags
+		}
 
 		id, _ := strconv.Atoi(d.Id())
 		updatedCredential := map[string]interface{}{
 			"name":            d.Get("name").(string),
 			"description":     d.Get("description").(string),
 			"organization":    d.Get("organization_id").(int),
-			"credential_type": 1, // SSH
+			"credential_type": machineCredType.ID,
 			"inputs": map[string]interface{}{
 				"username":            d.Get("username").(string),
 				"password":            d.Get("password").(string),
@@ -215,7 +235,6 @@ func resourceCredentialMachineUpdate(ctx context.Context, d *schema.ResourceData
 			},
 		}
 
-		client := m.(*awx.AWX)
 		_, err = client.CredentialsService.UpdateCredentialsByID(id, updatedCredential, map[string]string{})
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{

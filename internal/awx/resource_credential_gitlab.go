@@ -10,6 +10,8 @@ import (
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
 )
 
+const gitlabCredentialTypeName = "GitLab Personal Access Token"
+
 func resourceCredentialGitlab() *schema.Resource {
 	return &schema.Resource{
 		Description:   "`awx_credential_gitlab` manages GitLab Personal Access Token credentials in AWX.",
@@ -48,19 +50,28 @@ func resourceCredentialGitlab() *schema.Resource {
 
 func resourceCredentialGitlabCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var err error
+
+	client := m.(*awx.AWX)
+	gitlabCredType, err := client.CredentialTypeService.GetCredentialTypeByName(gitlabCredentialTypeName, map[string]string{})
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to fetch credential type",
+			Detail:   fmt.Sprintf("Unable to fetch credential type with Name: %s. Error: %s", gitlabCredentialTypeName, err.Error()),
+		})
+		return diags
+	}
 
 	newCredential := map[string]interface{}{
 		"name":            d.Get("name").(string),
 		"description":     d.Get("description").(string),
 		"organization":    d.Get("organization_id").(int),
-		"credential_type": 12, // GitLab Personal Access Token
+		"credential_type": gitlabCredType.ID,
 		"inputs": map[string]interface{}{
 			"token": d.Get("token").(string),
 		},
 	}
 
-	client := m.(*awx.AWX)
 	cred, err := client.CredentialsService.CreateCredentials(newCredential, map[string]string{})
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
@@ -119,20 +130,28 @@ func resourceCredentialGitlabUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.HasChanges(keys...) {
-		var err error
+		client := m.(*awx.AWX)
+		gitlabCredType, err := client.CredentialTypeService.GetCredentialTypeByName(gitlabCredentialTypeName, map[string]string{})
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to fetch credential type",
+				Detail:   fmt.Sprintf("Unable to fetch credential type with Name: %s. Error: %s", gitlabCredentialTypeName, err.Error()),
+			})
+			return diags
+		}
 
 		id, _ := strconv.Atoi(d.Id())
 		updatedCredential := map[string]interface{}{
 			"name":            d.Get("name").(string),
 			"description":     d.Get("description").(string),
 			"organization":    d.Get("organization_id").(int),
-			"credential_type": 12, // GitLab Personal Access Token
+			"credential_type": gitlabCredType.ID,
 			"inputs": map[string]interface{}{
 				"token": d.Get("token").(string),
 			},
 		}
 
-		client := m.(*awx.AWX)
 		_, err = client.CredentialsService.UpdateCredentialsByID(id, updatedCredential, map[string]string{})
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
