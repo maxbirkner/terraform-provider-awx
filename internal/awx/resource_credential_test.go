@@ -202,6 +202,41 @@ func Test_sanitizeEncryptedInputs(t *testing.T) {
 				"password": "$encrypted$",
 			},
 		},
+		{
+			name: "nil secretFields (fallback) - all encrypted fields replaced",
+			apiInputs: map[string]interface{}{
+				"username": "admin",
+				"password": "$encrypted$",
+				"token":    "$encrypted$",
+			},
+			stateInputs: map[string]interface{}{
+				"username": "admin",
+				"password": "secret-pw",
+				"token":    "secret-tok",
+			},
+			secretFields: nil,
+			expected: map[string]interface{}{
+				"username": "admin",
+				"password": "secret-pw",
+				"token":    "secret-tok",
+			},
+		},
+		{
+			name: "nil secretFields - non-encrypted values preserved",
+			apiInputs: map[string]interface{}{
+				"username": "admin",
+				"password": "$encrypted$",
+			},
+			stateInputs: map[string]interface{}{
+				"username": "old-admin",
+				"password": "secret-pw",
+			},
+			secretFields: nil,
+			expected: map[string]interface{}{
+				"username": "admin",
+				"password": "secret-pw",
+			},
+		},
 	}
 
 	for _, tt := range tests {

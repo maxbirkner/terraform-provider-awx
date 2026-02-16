@@ -97,12 +97,23 @@ func resourceCredentialRead(_ context.Context, d *schema.ResourceData, m interfa
 		return diag.FromErr(err)
 	}
 
-	// Fetch the credential type to identify which input fields are secret.
-	// AWX returns "$encrypted$" for secret fields, which would cause
-	// perpetual drift. For those fields, preserve the current state value.
-	secretFields := getSecretFields(client, cred.CredentialTypeID)
+	// Only fetch the credential type (an extra API call) if AWX has returned
+	// "$encrypted$" markers in the inputs. If there are no such markers, there
+	// are no secret fields we need to sanitize, so we can skip the lookup to
+	// reduce API load and refresh latency.
 	inputs := cred.Inputs
-	if len(secretFields) > 0 {
+	hasEncrypted := false
+	for _, v := range inputs {
+		if s, ok := v.(string); ok && s == "$encrypted$" {
+			hasEncrypted = true
+			break
+		}
+	}
+	if hasEncrypted {
+		// Fetch the credential type to identify which input fields are secret.
+		// AWX returns "$encrypted$" for secret fields, which would cause
+		// perpetual drift. For those fields, preserve the current state value.
+		secretFields := getSecretFields(client, cred.CredentialTypeID)
 		currentInputs, ok := d.GetOk("inputs")
 		var stateInputs map[string]interface{}
 		if ok {
@@ -119,22 +130,32 @@ func resourceCredentialRead(_ context.Context, d *schema.ResourceData, m interfa
 }
 
 // sanitizeEncryptedInputs replaces "$encrypted$" values in api-returned
-// inputs with the corresponding values from the current Terraform state,
-// but only for fields that are known to be secret. Non-secret fields and
-// secret fields that do not contain "$encrypted$" are left unchanged.
+// inputs with the corresponding values from the current Terraform state.
+//
+// When secretFields is non-nil, only the listed fields are considered for
+// replacement. When secretFields is nil (e.g. because the credential type
+// could not be fetched), every input that equals "$encrypted$" is replaced
+// to avoid reintroducing perpetual drift during transient failures.
 func sanitizeEncryptedInputs(apiInputs, stateInputs map[string]interface{}, secretFields map[string]struct{}) map[string]interface{} {
 	result := make(map[string]interface{}, len(apiInputs))
 	for k, v := range apiInputs {
 		result[k] = v
 	}
 
-	for fieldName := range secretFields {
-		val, exists := result[fieldName]
-		if !exists {
+	for fieldName, val := range result {
+		strVal, isStr := val.(string)
+		if !isStr || strVal != "$encrypted$" {
 			continue
 		}
-		strVal, isStr := val.(string)
-		if isStr && strVal == "$encrypted$" && stateInputs != nil {
+		// If we have a secret-fields set, only sanitize known secret fields.
+		// If the set is nil (credential type fetch failed), sanitize all
+		// $encrypted$ values as a safe fallback.
+		if secretFields != nil {
+			if _, isSecret := secretFields[fieldName]; !isSecret {
+				continue
+			}
+		}
+		if stateInputs != nil {
 			if stateVal, hasState := stateInputs[fieldName]; hasState {
 				result[fieldName] = stateVal
 			}
@@ -150,13 +171,14 @@ func sanitizeEncryptedInputs(apiInputs, stateInputs map[string]interface{}, secr
 //
 //	{"fields": [{"id": "username", ...}, {"id": "password", "secret": true, ...}]}
 //
-// On any error (network, parsing), it returns an empty map so the read
-// operation degrades gracefully rather than failing.
+// On any error (network, parsing), it returns nil so the caller can fall
+// back to sanitizing all "$encrypted$" values rather than skipping
+// sanitization entirely.
 func getSecretFields(client *awx.AWX, credentialTypeID int) map[string]struct{} {
 	credType, err := client.CredentialTypeService.GetCredentialTypeByID(credentialTypeID, map[string]string{})
 	if err != nil {
-		fmt.Printf("[WARN] Unable to fetch credential type %d to determine secret fields: %s\n", credentialTypeID, err)
-		return make(map[string]struct{})
+		fmt.Printf("[WARN] Unable to fetch credential type %d to determine secret fields: %v\n", credentialTypeID, err)
+		return nil
 	}
 
 	return parseSecretFieldsFromInputs(credType.Inputs)
