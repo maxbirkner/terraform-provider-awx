@@ -41,6 +41,7 @@ resource "awx_credential_azure_key_vault" "example" {
 
 ### Optional
 
+- `cloud_name` (String) The Azure cloud environment. Options: AzureCloud, AzureUSGovernment, AzureChinaCloud, AzureGermanCloud.
 - `description` (String) The description of the credential.
 
 ### Read-Only
