@@ -10,7 +10,7 @@ import (
 	awx "github.com/josh-silvas/terraform-provider-awx/tools/goawx"
 )
 
-const galaxyCredentialTypeName = "Ansible Galaxy/Automation Hub API Token"
+const galaxyCredentialTypeName = "Ansible Galaxy/Automation Hub API Token" //nolint:gosec
 
 func resourceCredentialGalaxy() *schema.Resource {
 	return &schema.Resource{
