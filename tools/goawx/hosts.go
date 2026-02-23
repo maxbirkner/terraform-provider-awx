@@ -202,6 +202,41 @@ func (h *HostService) DisAssociateGroup(id int, data map[string]interface{}, _ m
 	return result, nil
 }
 
+// ListHostGroups returns the groups associated with an awx Host.
+func (h *HostService) ListHostGroups(id int, params map[string]string) ([]*Group, error) {
+	var allGroups []*Group
+	endpoint := fmt.Sprintf("%s%d/groups/", hostsAPIEndpoint, id)
+
+	for {
+		result := new(ListGroupsResponse)
+		resp, err := h.client.Requester.GetJSON(endpoint, result, params)
+		if resp != nil {
+			func() {
+				if err := resp.Body.Close(); err != nil {
+					fmt.Println(err)
+				}
+			}()
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		if err := CheckResponse(resp); err != nil {
+			return nil, err
+		}
+
+		allGroups = append(allGroups, result.Results...)
+
+		if result.Next == nil || result.Next.(string) == "" {
+			break
+		}
+		endpoint = result.Next.(string)
+		params = nil // already encoded in the next URL
+	}
+
+	return allGroups, nil
+}
+
 // DeleteHost delete an awx Host.
 func (h *HostService) DeleteHost(id int) (*Host, error) {
 	result := new(Host)
