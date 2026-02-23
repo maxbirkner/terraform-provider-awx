@@ -122,19 +122,28 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, m interface
 	}
 
 	if d.HasChange("group_ids") {
-		// TODO Check whats happen with removin groups ....
-		rawGroups := d.Get("group_ids").([]interface{})
-		for _, v := range rawGroups {
-			_, err := client.HostService.AssociateGroup(id, map[string]interface{}{
-				"id": v.(int),
-			}, map[string]string{})
-			if err != nil {
-				return utils.Diagf(diagHostTitle, "Assign Group Id %v to hostid %v fail, got  %s", v, id, err)
+		oldVal, newVal := d.GetChange("group_ids")
+		oldIDs := extractIntList(oldVal.([]interface{}))
+		newIDs := extractIntList(newVal.([]interface{}))
+		added, removed := intSetDiff(oldIDs, newIDs)
+
+		for _, gid := range added {
+			if _, err := client.HostService.AssociateGroup(id, map[string]interface{}{
+				"id": gid,
+			}, map[string]string{}); err != nil {
+				return utils.Diagf(diagHostTitle, "Associate Group Id %v to hostid %v fail, got  %s", gid, id, err)
+			}
+		}
+
+		for _, gid := range removed {
+			if _, err := client.HostService.DisAssociateGroup(id, map[string]interface{}{
+				"id": gid,
+			}, map[string]string{}); err != nil {
+				return utils.Diagf(diagHostTitle, "Disassociate Group Id %v from hostid %v fail, got  %s", gid, id, err)
 			}
 		}
 	}
 	return resourceHostRead(ctx, d, m)
-
 }
 
 func resourceHostRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -148,6 +157,19 @@ func resourceHostRead(_ context.Context, d *schema.ResourceData, m interface{}) 
 		return utils.DiagNotFound(diagHostTitle, id, err)
 	}
 	d = setHostResourceData(d, res)
+
+	// Fetch actual group memberships from AWX API
+	groups, err := client.HostService.ListHostGroups(id, make(map[string]string))
+	if err != nil {
+		return utils.Diagf(diagHostTitle, "Failed to list groups for host %v: %s", id, err)
+	}
+	groupIDs := make([]int, len(groups))
+	for i, g := range groups {
+		groupIDs[i] = g.ID
+	}
+	if err := d.Set("group_ids", groupIDs); err != nil {
+		return utils.Diagf(diagHostTitle, "Error setting group_ids for host %v: %s", id, err)
+	}
 	return nil
 }
 
@@ -184,8 +206,38 @@ func setHostResourceData(d *schema.ResourceData, r *awx.Host) *schema.ResourceDa
 	if err := d.Set("variables", utils.Normalize(r.Variables)); err != nil {
 		fmt.Println("Error setting variables", err)
 	}
-	if err := d.Set("group_ids", d.Get("group_ids").([]interface{})); err != nil {
-		fmt.Println("Error setting group_ids", err)
-	}
+	// group_ids are set by resourceHostRead after fetching from the API
 	return d
+}
+
+// extractIntList converts a []interface{} (from Terraform schema) to []int.
+func extractIntList(raw []interface{}) []int {
+	out := make([]int, len(raw))
+	for i, v := range raw {
+		out[i] = v.(int)
+	}
+	return out
+}
+
+// intSetDiff computes the added and removed elements between old and new int slices.
+func intSetDiff(oldIDs, newIDs []int) (added, removed []int) {
+	oldSet := make(map[int]struct{}, len(oldIDs))
+	for _, id := range oldIDs {
+		oldSet[id] = struct{}{}
+	}
+	newSet := make(map[int]struct{}, len(newIDs))
+	for _, id := range newIDs {
+		newSet[id] = struct{}{}
+	}
+	for _, id := range newIDs {
+		if _, ok := oldSet[id]; !ok {
+			added = append(added, id)
+		}
+	}
+	for _, id := range oldIDs {
+		if _, ok := newSet[id]; !ok {
+			removed = append(removed, id)
+		}
+	}
+	return
 }
