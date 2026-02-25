@@ -1,6 +1,7 @@
 dist/
 vendor/
 .idea/
+.vscode
 .DS_Store
 terraform-provider-awx
 bin
