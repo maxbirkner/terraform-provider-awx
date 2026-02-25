@@ -3,6 +3,7 @@ package awx
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -167,6 +168,7 @@ func resourceHostRead(_ context.Context, d *schema.ResourceData, m interface{}) 
 	for i, g := range groups {
 		groupIDs[i] = g.ID
 	}
+	sort.Ints(groupIDs)
 	if err := d.Set("group_ids", groupIDs); err != nil {
 		return utils.Diagf(diagHostTitle, "Error setting group_ids for host %v: %s", id, err)
 	}
