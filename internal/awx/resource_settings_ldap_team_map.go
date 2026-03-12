@@ -293,6 +293,11 @@ func resourceSettingsLDAPTeamMapV0() *schema.Resource {
 			"organization": {Type: schema.TypeString},
 			"remove":       {Type: schema.TypeBool},
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(1 * time.Minute),
+			Update: schema.DefaultTimeout(1 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
 	}
 }
 
