@@ -42,7 +42,7 @@ resource "awx_settings_ldap_team_map" "example" {
 
 - `remove` (Boolean) When True, a user who is not a member of the given groups will be removed from the team
 - `timeouts` (Block, Optional) (see [below for nested schema](#nestedblock--timeouts))
-- `users` (List of String) Group DNs to map to this team
+- `users` (Set of String) Group DNs to map to this team
 
 ### Read-Only
 
