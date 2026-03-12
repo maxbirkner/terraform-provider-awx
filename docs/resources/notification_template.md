@@ -48,7 +48,7 @@ Optional:
 
 - `account_sid` (String) Twilio account SID
 - `account_token` (String) Twilio account token
-- `channels` (List of String) The Slack channel(s) to send notifications to.
+- `channels` (Set of String) The Slack channel(s) to send notifications to.
 - `client_name` (String) PagerDuty client name
 - `disable_ssl_verification` (Boolean)
 - `from_number` (String) Twilio from number
@@ -63,16 +63,16 @@ Optional:
 - `nickname` (String)
 - `password` (String) HTTP or SMTP password.
 - `port` (Number) SMTP or IRC server port.
-- `recipients` (List of String) The email address(es) to send notifications to.
+- `recipients` (Set of String) The email address(es) to send notifications to.
 - `rocketchat_no_verify_ssl` (Boolean)
 - `rocketchat_url` (String) The RocketChat URL.
 - `sender` (String) The email address to send notifications from.
 - `server` (String) The IRC server hostname.
 - `service_key` (String) PagerDuty service key
 - `subdomain` (String) PagerDuty subdomain
-- `targets` (List of String) The IRC channel(s) to send notifications to.
+- `targets` (Set of String) The IRC channel(s) to send notifications to.
 - `timeout` (Number) SMTP server timeout.
-- `to_numbers` (List of String) Twilio to numbers
+- `to_numbers` (Set of String) Twilio to numbers
 - `token` (String) Slack or PagerDuty authentication token.
 - `url` (String) The HTTP webhook URL.
 - `use_ssl` (Boolean) Use SSL for IRC or SMTP connections.

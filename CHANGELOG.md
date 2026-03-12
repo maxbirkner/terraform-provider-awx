@@ -1,3 +1,15 @@
+# [1.8.0](https://github.com/maxbirkner/terraform-provider-awx/compare/v1.7.9...v1.8.0)
+
+### Changes
+
+* `group_ids` on `awx_host` changed from List to Set (order-insensitive). Includes state migration.
+* `recipients`, `channels`, `to_numbers`, `targets` on `awx_notification_template` changed from List to Set. Includes state migration.
+* `users` on `awx_settings_ldap_team_map` changed from List to Set. Includes state migration.
+
+### Fixes
+
+* `awx_host` no longer produces spurious diffs when the AWX API returns group IDs in a different order.
+
 # [1.1.4](https://github.com/josh-silvas/terraform-provider-awx/compare/v1.1.3...v1.1.4) (2024-10-02)
 
 ### Changes:

@@ -24,6 +24,15 @@ func resourceSettingsLDAPTeamMap() *schema.Resource {
 		DeleteContext: resourceSettingsLDAPTeamMapDelete,
 		UpdateContext: resourceSettingsLDAPTeamMapUpdate,
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    resourceSettingsLDAPTeamMapV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceSettingsLDAPTeamMapStateUpgradeV0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -31,10 +40,11 @@ func resourceSettingsLDAPTeamMap() *schema.Resource {
 				Description: "Name of this Team",
 			},
 			"users": {
-				Type: schema.TypeList,
+				Type: schema.TypeSet,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				Set:         schema.HashString,
 				Optional:    true,
 				Description: "Group DNs to map to this team",
 			},
@@ -102,7 +112,7 @@ func resourceSettingsLDAPTeamMapCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	newTMap := teamMapEntry{
-		Users:        d.Get("users").([]interface{}),
+		Users:        d.Get("users").(*schema.Set).List(),
 		Organization: d.Get("organization").(string),
 		Remove:       d.Get("remove").(bool),
 	}
@@ -150,7 +160,7 @@ func resourceSettingsLDAPTeamMapUpdate(ctx context.Context, d *schema.ResourceDa
 	id := d.Id()
 	name := d.Get("name").(string)
 	organization := d.Get("organization").(string)
-	users := d.Get("users").([]interface{})
+	users := d.Get("users").(*schema.Set).List()
 	remove := d.Get("remove").(bool)
 
 	if name != id {
@@ -271,4 +281,28 @@ func resourceSettingsLDAPTeamMapDelete(_ context.Context, d *schema.ResourceData
 	}
 	d.SetId("")
 	return nil
+}
+
+// resourceSettingsLDAPTeamMapV0 returns the v0 schema (before TypeList→TypeSet migration)
+// used by the state upgrader to interpret old state.
+func resourceSettingsLDAPTeamMapV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"name":         {Type: schema.TypeString},
+			"users":        {Type: schema.TypeList, Elem: &schema.Schema{Type: schema.TypeString}},
+			"organization": {Type: schema.TypeString},
+			"remove":       {Type: schema.TypeBool},
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(1 * time.Minute),
+			Update: schema.DefaultTimeout(1 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
+		},
+	}
+}
+
+// resourceSettingsLDAPTeamMapStateUpgradeV0 migrates state from v0 to v1.
+// The JSON representation is identical, so the state is passed through unchanged.
+func resourceSettingsLDAPTeamMapStateUpgradeV0(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+	return rawState, nil
 }

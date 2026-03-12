@@ -42,7 +42,7 @@ YAML
 
 - `description` (String) The description of the host
 - `enabled` (Boolean) The enabled status of the host
-- `group_ids` (List of Number) The group ids of the host
+- `group_ids` (Set of Number) The group ids of the host
 - `instance_id` (String) The instance id of the host
 - `variables` (String) The variables of the host
 

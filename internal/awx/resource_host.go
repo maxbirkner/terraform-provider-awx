@@ -3,7 +3,6 @@ package awx
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -21,6 +20,15 @@ func resourceHost() *schema.Resource {
 		ReadContext:   resourceHostRead,
 		DeleteContext: resourceHostDelete,
 		UpdateContext: resourceHostUpdate,
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    resourceHostV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceHostStateUpgradeV0,
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -40,8 +48,9 @@ func resourceHost() *schema.Resource {
 				Description: "The inventory id of the host",
 			},
 			"group_ids": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Set:         schema.HashInt,
 				Optional:    true,
 				Description: "The group ids of the host",
 			},
@@ -90,7 +99,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 	hostID := result.ID
 	if d.IsNewResource() {
-		rawGroups := d.Get("group_ids").([]interface{})
+		rawGroups := d.Get("group_ids").(*schema.Set).List()
 		for _, v := range rawGroups {
 
 			if _, err := awxService.AssociateGroup(hostID, map[string]interface{}{
@@ -124,11 +133,11 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 	if d.HasChange("group_ids") {
 		oldVal, newVal := d.GetChange("group_ids")
-		oldIDs := extractIntList(oldVal.([]interface{}))
-		newIDs := extractIntList(newVal.([]interface{}))
-		added, removed := intSetDiff(oldIDs, newIDs)
+		oldSet := oldVal.(*schema.Set)
+		newSet := newVal.(*schema.Set)
 
-		for _, gid := range added {
+		for _, v := range newSet.Difference(oldSet).List() {
+			gid := v.(int)
 			if _, err := client.HostService.AssociateGroup(id, map[string]interface{}{
 				"id": gid,
 			}, map[string]string{}); err != nil {
@@ -136,7 +145,8 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, m interface
 			}
 		}
 
-		for _, gid := range removed {
+		for _, v := range oldSet.Difference(newSet).List() {
+			gid := v.(int)
 			if _, err := client.HostService.DisAssociateGroup(id, map[string]interface{}{
 				"id": gid,
 			}, map[string]string{}); err != nil {
@@ -168,7 +178,6 @@ func resourceHostRead(_ context.Context, d *schema.ResourceData, m interface{}) 
 	for i, g := range groups {
 		groupIDs[i] = g.ID
 	}
-	sort.Ints(groupIDs)
 	if err := d.Set("group_ids", groupIDs); err != nil {
 		return utils.Diagf(diagHostTitle, "Error setting group_ids for host %v: %s", id, err)
 	}
@@ -212,34 +221,27 @@ func setHostResourceData(d *schema.ResourceData, r *awx.Host) *schema.ResourceDa
 	return d
 }
 
-// extractIntList converts a []interface{} (from Terraform schema) to []int.
-func extractIntList(raw []interface{}) []int {
-	out := make([]int, len(raw))
-	for i, v := range raw {
-		out[i] = v.(int)
+// resourceHostV0 returns the v0 schema (before TypeList→TypeSet migration)
+// used by the state upgrader to interpret old state.
+func resourceHostV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"name":         {Type: schema.TypeString},
+			"description":  {Type: schema.TypeString},
+			"inventory_id": {Type: schema.TypeInt},
+			"group_ids": {
+				Type: schema.TypeList,
+				Elem: &schema.Schema{Type: schema.TypeInt},
+			},
+			"enabled":     {Type: schema.TypeBool},
+			"instance_id": {Type: schema.TypeString},
+			"variables":   {Type: schema.TypeString},
+		},
 	}
-	return out
 }
 
-// intSetDiff computes the added and removed elements between old and new int slices.
-func intSetDiff(oldIDs, newIDs []int) (added, removed []int) {
-	oldSet := make(map[int]struct{}, len(oldIDs))
-	for _, id := range oldIDs {
-		oldSet[id] = struct{}{}
-	}
-	newSet := make(map[int]struct{}, len(newIDs))
-	for _, id := range newIDs {
-		newSet[id] = struct{}{}
-	}
-	for _, id := range newIDs {
-		if _, ok := oldSet[id]; !ok {
-			added = append(added, id)
-		}
-	}
-	for _, id := range oldIDs {
-		if _, ok := newSet[id]; !ok {
-			removed = append(removed, id)
-		}
-	}
-	return
+// resourceHostStateUpgradeV0 migrates state from v0 (TypeList) to v1 (TypeSet).
+// The JSON representation is identical (array of ints), so the state is passed through unchanged.
+func resourceHostStateUpgradeV0(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+	return rawState, nil
 }

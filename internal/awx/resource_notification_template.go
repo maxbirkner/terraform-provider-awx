@@ -22,6 +22,15 @@ func resourceNotificationTemplate() *schema.Resource {
 		UpdateContext: resourceNotificationTemplateUpdate,
 		DeleteContext: resourceNotificationTemplateDelete,
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Version: 0,
+				Type:    resourceNotificationTemplateV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceNotificationTemplateStateUpgradeV0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:        schema.TypeString,
@@ -84,9 +93,10 @@ func resourceNotificationTemplate() *schema.Resource {
 							Description: "SMTP server hostname.",
 						},
 						"recipients": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Optional:    true,
 							Description: "The email address(es) to send notifications to.",
+							Set:         schema.HashString,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -109,9 +119,10 @@ func resourceNotificationTemplate() *schema.Resource {
 						},
 						// slack notification-type settings
 						"channels": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Optional:    true,
 							Description: "The Slack channel(s) to send notifications to.",
+							Set:         schema.HashString,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -137,9 +148,10 @@ func resourceNotificationTemplate() *schema.Resource {
 							Description: "Twilio from number",
 						},
 						"to_numbers": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Optional:    true,
 							Description: "Twilio to numbers",
+							Set:         schema.HashString,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -222,9 +234,10 @@ func resourceNotificationTemplate() *schema.Resource {
 							Optional: true,
 						},
 						"targets": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Optional:    true,
 							Description: "The IRC channel(s) to send notifications to.",
+							Set:         schema.HashString,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -373,4 +386,72 @@ func setNotificationTemplateResourceData(d *schema.ResourceData, r *awx.Notifica
 	}
 	d.SetId(strconv.Itoa(r.ID))
 	return d
+}
+
+// resourceNotificationTemplateV0 returns the v0 schema (before TypeList→TypeSet migration)
+// used by the state upgrader to interpret old state.
+func resourceNotificationTemplateV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"name":              {Type: schema.TypeString},
+			"organization_id":   {Type: schema.TypeString},
+			"notification_type": {Type: schema.TypeString},
+			"description":       {Type: schema.TypeString},
+			"notification_configuration": {
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"password":                 {Type: schema.TypeString},
+						"port":                     {Type: schema.TypeInt},
+						"token":                    {Type: schema.TypeString},
+						"username":                 {Type: schema.TypeString},
+						"use_ssl":                  {Type: schema.TypeBool},
+						"host":                     {Type: schema.TypeString},
+						"recipients":               {Type: schema.TypeList, Elem: &schema.Schema{Type: schema.TypeString}},
+						"sender":                   {Type: schema.TypeString},
+						"timeout":                  {Type: schema.TypeInt},
+						"use_tls":                  {Type: schema.TypeBool},
+						"channels":                 {Type: schema.TypeList, Elem: &schema.Schema{Type: schema.TypeString}},
+						"hex_color":                {Type: schema.TypeString},
+						"account_sid":              {Type: schema.TypeString},
+						"account_token":            {Type: schema.TypeString},
+						"from_number":              {Type: schema.TypeString},
+						"to_numbers":               {Type: schema.TypeList, Elem: &schema.Schema{Type: schema.TypeString}},
+						"client_name":              {Type: schema.TypeString},
+						"service_key":              {Type: schema.TypeString},
+						"subdomain":                {Type: schema.TypeString},
+						"grafana_key":              {Type: schema.TypeString},
+						"grafana_url":              {Type: schema.TypeString},
+						"disable_ssl_verification": {Type: schema.TypeBool},
+						"headers":                  {Type: schema.TypeMap},
+						"http_method":              {Type: schema.TypeString},
+						"url":                      {Type: schema.TypeString},
+						"mattermost_no_verify_ssl": {Type: schema.TypeBool},
+						"mattermost_url":           {Type: schema.TypeString},
+						"rocketchat_no_verify_ssl": {Type: schema.TypeBool},
+						"rocketchat_url":           {Type: schema.TypeString},
+						"server":                   {Type: schema.TypeString},
+						"nickname":                 {Type: schema.TypeString},
+						"targets":                  {Type: schema.TypeList, Elem: &schema.Schema{Type: schema.TypeString}},
+					},
+				},
+			},
+			"messages": {
+				Type: schema.TypeSet,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"started": {Type: schema.TypeMap},
+						"success": {Type: schema.TypeMap},
+						"error":   {Type: schema.TypeMap},
+					},
+				},
+			},
+		},
+	}
+}
+
+// resourceNotificationTemplateStateUpgradeV0 migrates state from v0 to v1.
+// The JSON representation is identical, so the state is passed through unchanged.
+func resourceNotificationTemplateStateUpgradeV0(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+	return rawState, nil
 }
