@@ -181,10 +181,24 @@ type UserCapabilities struct {
 	Delete   bool `json:"delete"`
 }
 
-// Labels represents the awx api labels.
+// Label represents an individual AWX label.
+type Label struct {
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	Organization int    `json:"organization"`
+}
+
+// Labels represents the awx api labels summary (used inside summary_fields).
 type Labels struct {
-	Count   int           `json:"count"`
-	Results []interface{} `json:"results"`
+	Count   int      `json:"count"`
+	Results []*Label `json:"results"`
+}
+
+// ListLabelsResponse represents a paginated list of Label objects returned by the
+// /api/v2/job_templates/{id}/labels/ endpoint.
+type ListLabelsResponse struct {
+	Pagination
+	Results []*Label `json:"results"`
 }
 
 // Summary represents the awx api summary fields.
