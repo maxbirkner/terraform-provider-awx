@@ -205,8 +205,8 @@ func (jt *JobTemplateService) ListJobTemplateLabels(id int) ([]*Label, error) {
 func (jt *JobTemplateService) AssociateLabel(id int, data map[string]interface{}) (*Label, error) {
 	result := new(Label)
 	endpoint := fmt.Sprintf("%s%d/labels/", jobTemplateAPIEndpoint, id)
-	mandatoryFields = []string{"name", "organization"}
-	validate, status := ValidateParams(data, mandatoryFields)
+	mandatory := []string{"name", "organization"}
+	validate, status := ValidateParams(data, mandatory)
 	if !status {
 		return nil, fmt.Errorf("mandatory input arguments are absent: %s", validate)
 	}
