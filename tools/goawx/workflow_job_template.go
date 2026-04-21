@@ -145,6 +145,84 @@ func (jt *WorkflowJobTemplateService) DeleteWorkflowJobTemplate(id int) (*Workfl
 	return result, nil
 }
 
+// ListWorkflowJobTemplateLabels returns all labels associated with a workflow job template.
+func (jt *WorkflowJobTemplateService) ListWorkflowJobTemplateLabels(id int) ([]*Label, error) {
+	result := new(ListLabelsResponse)
+	endpoint := fmt.Sprintf("%s%d/labels/", workflowJobTemplateAPIEndpoint, id)
+	resp, err := jt.client.Requester.GetJSON(endpoint, result, map[string]string{})
+	if resp != nil {
+		func() {
+			if err := resp.Body.Close(); err != nil {
+				fmt.Println(err)
+			}
+		}()
+	}
+	if err != nil {
+		return nil, err
+	}
+	if err := CheckResponse(resp); err != nil {
+		return nil, err
+	}
+	return result.Results, nil
+}
+
+// AssociateLabel creates (or finds) a label by name+organization and associates it
+// with the workflow job template. It returns the Label object produced by AWX.
+func (jt *WorkflowJobTemplateService) AssociateLabel(id int, data map[string]interface{}) (*Label, error) {
+	result := new(Label)
+	endpoint := fmt.Sprintf("%s%d/labels/", workflowJobTemplateAPIEndpoint, id)
+	mandatory := []string{"name", "organization"}
+	validate, status := ValidateParams(data, mandatory)
+	if !status {
+		return nil, fmt.Errorf("mandatory input arguments are absent: %s", validate)
+	}
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := jt.client.Requester.PostJSON(endpoint, bytes.NewReader(payload), result, nil)
+	if resp != nil {
+		func() {
+			if err := resp.Body.Close(); err != nil {
+				fmt.Println(err)
+			}
+		}()
+	}
+	if err != nil {
+		return nil, err
+	}
+	if err := CheckResponse(resp); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// DisassociateLabel removes a label association from a workflow job template.
+func (jt *WorkflowJobTemplateService) DisAssociateLabel(id int, labelID int) error {
+	result := new(Label)
+	endpoint := fmt.Sprintf("%s%d/labels/", workflowJobTemplateAPIEndpoint, id)
+	data := map[string]interface{}{
+		"id":           labelID,
+		"disassociate": true,
+	}
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	resp, err := jt.client.Requester.PostJSON(endpoint, bytes.NewReader(payload), result, nil)
+	if resp != nil {
+		func() {
+			if err := resp.Body.Close(); err != nil {
+				fmt.Println(err)
+			}
+		}()
+	}
+	if err != nil {
+		return err
+	}
+	return CheckResponse(resp)
+}
+
 // Launch a job with the workflow job template.
 func (jt *WorkflowJobTemplateService) Launch(id int, data map[string]interface{}, params map[string]string) (*JobLaunch, error) {
 	result := new(JobLaunch)
