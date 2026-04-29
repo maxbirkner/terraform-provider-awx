@@ -57,6 +57,7 @@ resource "awx_job_template_label" "example" {
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `label_id` (Number) The resolved AWX label ID used internally for efficient deletes.
 
 ## Import
 

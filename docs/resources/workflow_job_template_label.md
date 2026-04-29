@@ -24,3 +24,4 @@ Resource `awx_workflow_job_template_label` creates a label and associates it wit
 ### Read-Only
 
 - `id` (String) The ID of this resource.
+- `label_id` (Number) The resolved AWX label ID used internally for efficient deletes.
