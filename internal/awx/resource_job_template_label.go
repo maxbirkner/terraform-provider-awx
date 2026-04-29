@@ -2,8 +2,6 @@ package awx
 
 import (
 	"context"
-	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -52,42 +50,31 @@ func resourceJobTemplateLabelCreate(_ context.Context, d *schema.ResourceData, m
 		return utils.DiagNotFound(diagJobTemplateLabelTitle, jobTemplateID, err)
 	}
 
-	label, err := client.JobTemplateService.AssociateLabel(jobTemplateID, map[string]interface{}{
+	if _, err := client.JobTemplateService.AssociateLabel(jobTemplateID, map[string]interface{}{
 		"name":         d.Get("name").(string),
 		"organization": d.Get("organization_id").(int),
-	})
-	if err != nil {
+	}); err != nil {
 		return utils.DiagCreate(diagJobTemplateLabelTitle, err)
 	}
 
-	d.SetId(strconv.Itoa(label.ID))
+	d.SetId(labelAssociationStateID(jobTemplateID, d.Get("organization_id").(int), d.Get("name").(string)))
 	return nil
 }
 
 func resourceJobTemplateLabelRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
 	jobTemplateID := d.Get("job_template_id").(int)
-
-	labelID, err := strconv.Atoi(d.Id())
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: invalid resource ID %q: %w", diagJobTemplateLabelTitle, d.Id(), err))
-	}
+	name := d.Get("name").(string)
+	organizationID := d.Get("organization_id").(int)
 
 	labels, err := client.JobTemplateService.ListJobTemplateLabels(jobTemplateID)
 	if err != nil {
 		return utils.DiagNotFound(diagJobTemplateLabelTitle, jobTemplateID, err)
 	}
 
-	for _, label := range labels {
-		if label.ID == labelID {
-			if err := d.Set("name", label.Name); err != nil {
-				return diag.FromErr(fmt.Errorf("error setting name: %w", err))
-			}
-			if err := d.Set("organization_id", label.Organization); err != nil {
-				return diag.FromErr(fmt.Errorf("error setting organization_id: %w", err))
-			}
-			return nil
-		}
+	label := findAssociatedLabel(labels, name, organizationID)
+	if label != nil {
+		return syncLabelAssociationState(d, "job_template_id", label)
 	}
 
 	// Label is no longer associated with this job template — remove from state.
@@ -98,13 +85,21 @@ func resourceJobTemplateLabelRead(_ context.Context, d *schema.ResourceData, m i
 func resourceJobTemplateLabelDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
 	jobTemplateID := d.Get("job_template_id").(int)
+	name := d.Get("name").(string)
+	organizationID := d.Get("organization_id").(int)
 
-	labelID, err := strconv.Atoi(d.Id())
+	labels, err := client.JobTemplateService.ListJobTemplateLabels(jobTemplateID)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: invalid resource ID %q: %w", diagJobTemplateLabelTitle, d.Id(), err))
+		return utils.DiagDelete(diagJobTemplateLabelTitle, jobTemplateID, err)
 	}
 
-	if err := client.JobTemplateService.DisAssociateLabel(jobTemplateID, labelID); err != nil {
+	label := findAssociatedLabel(labels, name, organizationID)
+	if label == nil {
+		d.SetId("")
+		return nil
+	}
+
+	if err := client.JobTemplateService.DisAssociateLabel(jobTemplateID, label.ID); err != nil {
 		return utils.DiagDelete(diagJobTemplateLabelTitle, jobTemplateID, err)
 	}
 
