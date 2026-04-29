@@ -2,8 +2,6 @@ package awx
 
 import (
 	"context"
-	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -40,6 +38,11 @@ func resourceWorkflowJobTemplateLabel() *schema.Resource {
 				ForceNew:    true,
 				Description: "The ID of the organization that owns the label.",
 			},
+			"label_id": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The resolved AWX label ID used internally for efficient deletes.",
+			},
 		},
 	}
 }
@@ -60,34 +63,23 @@ func resourceWorkflowJobTemplateLabelCreate(_ context.Context, d *schema.Resourc
 		return utils.DiagCreate(diagWorkflowJobTemplateLabelTitle, err)
 	}
 
-	d.SetId(strconv.Itoa(label.ID))
-	return nil
+	return syncLabelAssociationCreateState(d, "workflow_job_template_id", label)
 }
 
 func resourceWorkflowJobTemplateLabelRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
 	wjtID := d.Get("workflow_job_template_id").(int)
-
-	labelID, err := strconv.Atoi(d.Id())
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: invalid resource ID %q: %w", diagWorkflowJobTemplateLabelTitle, d.Id(), err))
-	}
+	name := d.Get("name").(string)
+	organizationID := d.Get("organization_id").(int)
 
 	labels, err := client.WorkflowJobTemplateService.ListWorkflowJobTemplateLabels(wjtID)
 	if err != nil {
 		return utils.DiagNotFound(diagWorkflowJobTemplateLabelTitle, wjtID, err)
 	}
 
-	for _, label := range labels {
-		if label.ID == labelID {
-			if err := d.Set("name", label.Name); err != nil {
-				return diag.FromErr(fmt.Errorf("error setting name: %w", err))
-			}
-			if err := d.Set("organization_id", label.Organization); err != nil {
-				return diag.FromErr(fmt.Errorf("error setting organization_id: %w", err))
-			}
-			return nil
-		}
+	label := findAssociatedLabel(labels, name, organizationID)
+	if label != nil {
+		return syncLabelAssociationState(d, "workflow_job_template_id", label)
 	}
 
 	// Label is no longer associated with this workflow job template — remove from state.
@@ -99,12 +91,30 @@ func resourceWorkflowJobTemplateLabelDelete(_ context.Context, d *schema.Resourc
 	client := m.(*awx.AWX)
 	wjtID := d.Get("workflow_job_template_id").(int)
 
-	labelID, err := strconv.Atoi(d.Id())
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("%s: invalid resource ID %q: %w", diagWorkflowJobTemplateLabelTitle, d.Id(), err))
+	if labelID, ok := storedLabelAssociationLabelID(d); ok {
+		if err := client.WorkflowJobTemplateService.DisAssociateLabel(wjtID, labelID); err != nil {
+			return utils.DiagDelete(diagWorkflowJobTemplateLabelTitle, wjtID, err)
+		}
+
+		d.SetId("")
+		return nil
 	}
 
-	if err := client.WorkflowJobTemplateService.DisAssociateLabel(wjtID, labelID); err != nil {
+	name := d.Get("name").(string)
+	organizationID := d.Get("organization_id").(int)
+
+	labels, err := client.WorkflowJobTemplateService.ListWorkflowJobTemplateLabels(wjtID)
+	if err != nil {
+		return utils.DiagDelete(diagWorkflowJobTemplateLabelTitle, wjtID, err)
+	}
+
+	label := findAssociatedLabel(labels, name, organizationID)
+	if label == nil {
+		d.SetId("")
+		return nil
+	}
+
+	if err := client.WorkflowJobTemplateService.DisAssociateLabel(wjtID, label.ID); err != nil {
 		return utils.DiagDelete(diagWorkflowJobTemplateLabelTitle, wjtID, err)
 	}
 
