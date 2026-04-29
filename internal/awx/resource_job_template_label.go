@@ -38,6 +38,11 @@ func resourceJobTemplateLabel() *schema.Resource {
 				ForceNew:    true,
 				Description: "The ID of the organization that owns the label.",
 			},
+			"label_id": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The resolved AWX label ID used internally for efficient deletes.",
+			},
 		},
 	}
 }
@@ -50,20 +55,21 @@ func resourceJobTemplateLabelCreate(_ context.Context, d *schema.ResourceData, m
 		return utils.DiagNotFound(diagJobTemplateLabelTitle, jobTemplateID, err)
 	}
 
-	if _, err := client.JobTemplateService.AssociateLabel(jobTemplateID, map[string]interface{}{
+	label, err := client.JobTemplateService.AssociateLabel(jobTemplateID, map[string]interface{}{
 		"name":         d.Get("name").(string),
 		"organization": d.Get("organization_id").(int),
-	}); err != nil {
+	})
+	if err != nil {
 		return utils.DiagCreate(diagJobTemplateLabelTitle, err)
 	}
 
-	d.SetId(labelAssociationStateID(jobTemplateID, d.Get("organization_id").(int), d.Get("name").(string)))
-	return nil
+	return syncLabelAssociationCreateState(d, "job_template_id", label)
 }
 
 func resourceJobTemplateLabelRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
 	jobTemplateID := d.Get("job_template_id").(int)
+
 	name := d.Get("name").(string)
 	organizationID := d.Get("organization_id").(int)
 
@@ -85,6 +91,16 @@ func resourceJobTemplateLabelRead(_ context.Context, d *schema.ResourceData, m i
 func resourceJobTemplateLabelDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
 	jobTemplateID := d.Get("job_template_id").(int)
+
+	if labelID, ok := storedLabelAssociationLabelID(d); ok {
+		if err := client.JobTemplateService.DisAssociateLabel(jobTemplateID, labelID); err != nil {
+			return utils.DiagDelete(diagJobTemplateLabelTitle, jobTemplateID, err)
+		}
+
+		d.SetId("")
+		return nil
+	}
+
 	name := d.Get("name").(string)
 	organizationID := d.Get("organization_id").(int)
 

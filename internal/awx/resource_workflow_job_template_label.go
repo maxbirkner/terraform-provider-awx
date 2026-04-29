@@ -38,6 +38,11 @@ func resourceWorkflowJobTemplateLabel() *schema.Resource {
 				ForceNew:    true,
 				Description: "The ID of the organization that owns the label.",
 			},
+			"label_id": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The resolved AWX label ID used internally for efficient deletes.",
+			},
 		},
 	}
 }
@@ -50,15 +55,15 @@ func resourceWorkflowJobTemplateLabelCreate(_ context.Context, d *schema.Resourc
 		return utils.DiagNotFound(diagWorkflowJobTemplateLabelTitle, wjtID, err)
 	}
 
-	if _, err := client.WorkflowJobTemplateService.AssociateLabel(wjtID, map[string]interface{}{
+	label, err := client.WorkflowJobTemplateService.AssociateLabel(wjtID, map[string]interface{}{
 		"name":         d.Get("name").(string),
 		"organization": d.Get("organization_id").(int),
-	}); err != nil {
+	})
+	if err != nil {
 		return utils.DiagCreate(diagWorkflowJobTemplateLabelTitle, err)
 	}
 
-	d.SetId(labelAssociationStateID(wjtID, d.Get("organization_id").(int), d.Get("name").(string)))
-	return nil
+	return syncLabelAssociationCreateState(d, "workflow_job_template_id", label)
 }
 
 func resourceWorkflowJobTemplateLabelRead(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -85,6 +90,16 @@ func resourceWorkflowJobTemplateLabelRead(_ context.Context, d *schema.ResourceD
 func resourceWorkflowJobTemplateLabelDelete(_ context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*awx.AWX)
 	wjtID := d.Get("workflow_job_template_id").(int)
+
+	if labelID, ok := storedLabelAssociationLabelID(d); ok {
+		if err := client.WorkflowJobTemplateService.DisAssociateLabel(wjtID, labelID); err != nil {
+			return utils.DiagDelete(diagWorkflowJobTemplateLabelTitle, wjtID, err)
+		}
+
+		d.SetId("")
+		return nil
+	}
+
 	name := d.Get("name").(string)
 	organizationID := d.Get("organization_id").(int)
 
