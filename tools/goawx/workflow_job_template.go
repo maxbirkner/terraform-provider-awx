@@ -147,23 +147,8 @@ func (jt *WorkflowJobTemplateService) DeleteWorkflowJobTemplate(id int) (*Workfl
 
 // ListWorkflowJobTemplateLabels returns all labels associated with a workflow job template.
 func (jt *WorkflowJobTemplateService) ListWorkflowJobTemplateLabels(id int) ([]*Label, error) {
-	result := new(ListLabelsResponse)
 	endpoint := fmt.Sprintf("%s%d/labels/", workflowJobTemplateAPIEndpoint, id)
-	resp, err := jt.client.Requester.GetJSON(endpoint, result, map[string]string{})
-	if resp != nil {
-		func() {
-			if err := resp.Body.Close(); err != nil {
-				fmt.Println(err)
-			}
-		}()
-	}
-	if err != nil {
-		return nil, err
-	}
-	if err := CheckResponse(resp); err != nil {
-		return nil, err
-	}
-	return result.Results, nil
+	return getAllLabelPages(jt.client.Requester, endpoint, map[string]string{})
 }
 
 // AssociateLabel creates (or finds) a label by name+organization and associates it
